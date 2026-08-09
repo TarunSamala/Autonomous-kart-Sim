@@ -90,6 +90,22 @@
             "Pitch": 0.0,
             "Roll": 0.0,
             "Yaw": 0.0
+          },
+          "front_depth": {
+            "CaptureSettings": [
+              {
+                "ImageType": 2,
+                "Width": 785,
+                "Height": 785,
+                "FOV_Degrees": 90
+              }
+            ],
+            "X": 0.8,
+            "Y": 0.0,
+            "Z": 0.8,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 0.0
           }
         },
         "X": 2, "Y": 0, "Z": 0,

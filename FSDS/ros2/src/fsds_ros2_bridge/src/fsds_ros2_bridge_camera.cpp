@@ -154,6 +154,44 @@ cv::Mat noisify_depthimage(cv::Mat in)
     return out;
 }
 
+void publish_camera_info(const ImageResponse &img_response)
+{
+    sensor_msgs::msg::CameraInfo::SharedPtr info_msg =
+        std::make_shared<sensor_msgs::msg::CameraInfo>();
+
+    info_msg->header.stamp = make_ts(img_response.time_stamp);
+    info_msg->header.frame_id = camera_frame_id;
+    info_msg->width = img_response.width;
+    info_msg->height = img_response.height;
+    info_msg->distortion_model = "plumb_bob";
+    info_msg->d = {0, 0, 0, 0, 0};
+
+    double fx = static_cast<double>(img_response.width) / 2.0;
+    double fy = fx;
+    double cx = fx;
+    double cy = static_cast<double>(img_response.height) / 2.0;
+
+    info_msg->k = {
+        fx, 0, cx,
+        0, fy, cy,
+        0, 0, 1.0
+    };
+
+    info_msg->r = {
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+    };
+
+    info_msg->p = {
+        fx, 0, cx, 0,
+        0, fy, cy, 0,
+        0, 0, 1.0, 0
+    };
+
+    info_pub->publish(*info_msg);
+}
+
 void doDepthImageUpdate()
 {
     auto img_responses = getImage(ImageRequest(camera_name, ImageType::DepthPerspective, true, false));
@@ -168,6 +206,7 @@ void doDepthImageUpdate()
     sensor_msgs::msg::Image::SharedPtr img_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "32FC1", depth_img).toImageMsg();
     img_msg->header.stamp = make_ts(img_response.time_stamp);
     img_msg->header.frame_id = camera_frame_id;
+    publish_camera_info(img_response);
 
     image_pub->publish(*img_msg);
     fps_statistic.addCount();
@@ -216,7 +255,10 @@ int main(int argc, char ** argv)
     }
 
     // ready topic
-    image_pub = nh->create_publisher<sensor_msgs::msg::Image>(camera_frame_id + "/image_color", 1);
+    const std::string image_topic =
+        camera_frame_id + (depthcamera ? "/image_depth" : "/image_color");
+
+    image_pub = nh->create_publisher<sensor_msgs::msg::Image>(image_topic, 1);
     info_pub = nh->create_publisher<sensor_msgs::msg::CameraInfo>(camera_frame_id + "/camera_info", 1);
 
     // start the loop
