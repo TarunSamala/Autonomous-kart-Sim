@@ -11,7 +11,7 @@ intentionally omit a project prefix so that the software graph stays concise.
 | `sensor_interface` | Implemented | Simulator/RealSense and vehicle sensor adapters |
 | `teleop` | Implemented | Manual keyboard control |
 | `vio` | Baseline | Synchronized RGB-D odometry with IMU initialization |
-| `vslam` | Planned | Mapping, loop closure and global correction |
+| `vslam` | Baseline | RGB-D mapping, loop closure and global correction |
 | `state_estimator` | Planned | VIO, wheel odometry and chassis IMU fusion |
 | `perception` | Planned | Cones, obstacles and free-space estimation |
 | `control` | Planned | Path tracking and command arbitration |

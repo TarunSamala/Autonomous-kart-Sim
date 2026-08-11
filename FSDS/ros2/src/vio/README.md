@@ -55,9 +55,10 @@ The registered colored point cloud is enabled by default at
 vio-start point_cloud:=false
 ```
 
-Keep `publish_tf:=false` while the bridge publishes the simulator ground-truth
-transform to `fsds/FSCar`. Ground truth is for evaluation only and must never be
-used as odometry input to this node.
+The standalone launch defaults to `publish_tf:=false`. The VSLAM launch enables
+it to provide `vio/odom -> fsds/FSCar`, while RTAB-Map provides
+`map -> vio/odom`. Ground truth is for evaluation only and must never be used as
+odometry input to this node.
 
 Check output:
 
