@@ -15,11 +15,35 @@ def generate_launch_description():
         print('no cameras configured in ~/Formula-Student-Driverless-Simulator/settings.json')
 
     camera_nodes = []
+    paired_depth_cameras = {
+        config.get("RosDepthCamera")
+        for config in camera_configs.values()
+        if config.get("RosDepthCamera")
+    }
+
     for camera_name, camera_config in camera_configs.items():
+        # A paired depth camera is captured by its RGB node in the same AirSim
+        # simGetImages() request, so it must not get an independent timer/node.
+        if camera_name in paired_depth_cameras:
+            continue
+
         if not camera_config.get("RosEnabled", True):
             continue
 
         capture_config = camera_config["CaptureSettings"][0]
+        depth_camera_name = camera_config.get("RosDepthCamera", "")
+        if depth_camera_name and depth_camera_name not in camera_configs:
+            raise RuntimeError(
+                f"Camera '{camera_name}' references missing depth camera "
+                f"'{depth_camera_name}'")
+
+        if depth_camera_name:
+            depth_capture = camera_configs[depth_camera_name]["CaptureSettings"][0]
+            if capture_config["ImageType"] != 0 or depth_capture["ImageType"] != 2:
+                raise RuntimeError(
+                    f"RGB-D pair '{camera_name}'/'{depth_camera_name}' must use "
+                    "ImageType 0 and 2")
+
         camera_nodes.append(launch_ros.actions.Node(
             package='fsds_ros2_bridge',
             executable='fsds_ros2_bridge_camera',
@@ -30,6 +54,8 @@ def generate_launch_description():
                 {'camera_name': camera_name},
                 {'frame_id': camera_config.get("RosFrameId", f"fsds/{camera_name}")},
                 {'depthcamera': capture_config["ImageType"] == 2},
+                {'rgbd_mode': bool(depth_camera_name)},
+                {'depth_camera_name': depth_camera_name},
                 {'framerate': float(camera_config.get("RosFramerate", CAMERA_FRAMERATE))},
                 {'fov_degrees': float(capture_config["FOV_Degrees"])},
                 {'host_ip': launch.substitutions.LaunchConfiguration('host')},

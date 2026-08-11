@@ -1,0 +1,23 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+workspace_setup="$workspace_root/install/setup.zsh"
+
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
+source /opt/ros/humble/setup.zsh
+
+if [[ ! -f "$workspace_setup" ]]; then
+  print -u2 "vio-start: workspace is not built: $workspace_setup"
+  exit 1
+fi
+
+source "$workspace_setup"
+exec ros2 launch vio fsds_vio.launch.py "$@"

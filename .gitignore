@@ -1,1 +1,15 @@
 fsds-v2.2.0-linux/
+
+# ROS 2 / colcon generated output
+**/build/
+**/install/
+**/log/
+
+# Python generated output
+__pycache__/
+*.py[cod]
+
+# Runtime data
+*.db
+*.db3
+*.mcap

@@ -8,9 +8,9 @@ intentionally omit a project prefix so that the software graph stays concise.
 | Package | State | Responsibility |
 | --- | --- | --- |
 | `interfaces` | Planned | Shared messages and services |
-| `sensor_interface` | Planned | Simulator/RealSense and vehicle sensor adapters |
+| `sensor_interface` | Implemented | Simulator/RealSense and vehicle sensor adapters |
 | `teleop` | Implemented | Manual keyboard control |
-| `vio` | Planned | Visual-inertial odometry |
+| `vio` | Baseline | Synchronized RGB-D odometry with IMU initialization |
 | `vslam` | Planned | Mapping, loop closure and global correction |
 | `state_estimator` | Planned | VIO, wheel odometry and chassis IMU fusion |
 | `perception` | Planned | Cones, obstacles and free-space estimation |

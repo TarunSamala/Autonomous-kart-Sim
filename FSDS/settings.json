@@ -95,13 +95,14 @@
           },
           "front_rgb": {
             "RosEnabled": true,
-            "RosFramerate": 15.0,
+            "RosFramerate": 30.0,
             "RosFrameId": "fsds/front_rgb",
+            "RosDepthCamera": "front_depth",
             "CaptureSettings": [
               {
                 "ImageType": 0,
-                "Width": 1280,
-                "Height": 720,
+                "Width": 848,
+                "Height": 480,
                 "FOV_Degrees": 87
               }
             ],
@@ -113,14 +114,14 @@
             "Yaw": 0.0
           },
           "front_depth": {
-            "RosEnabled": true,
-            "RosFramerate": 15.0,
+            "RosEnabled": false,
+            "RosFramerate": 30.0,
             "RosFrameId": "fsds/front_rgb",
             "CaptureSettings": [
               {
                 "ImageType": 2,
-                "Width": 1280,
-                "Height": 720,
+                "Width": 848,
+                "Height": 480,
                 "FOV_Degrees": 87
               }
             ],
