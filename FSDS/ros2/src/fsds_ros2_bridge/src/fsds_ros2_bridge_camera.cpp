@@ -32,9 +32,14 @@ ros_bridge::Statistics fps_statistic;
 std::string camera_name = "";
 std::string camera_frame_prefix = "";
 std::string camera_frame_id = "";
+std::string camera_topic_prefix = "";
+std::string camera_topic_name = "";
 double framerate = 0.0;
+double camera_fov_degrees = 90.0;
 std::string host_ip = "localhost";
 bool depthcamera = false;
+
+void publish_camera_info(const ImageResponse &img_response);
 
 rclcpp::Time make_ts(uint64_t unreal_ts)
 {
@@ -86,32 +91,7 @@ void doImageUpdate()
 
     image_pub->publish(*img_msg);
 
-    sensor_msgs::msg::CameraInfo::SharedPtr info_msg = std::make_shared<sensor_msgs::msg::CameraInfo>();
-    info_msg->header.stamp = make_ts(img_response.time_stamp);
-    info_msg->header.frame_id = camera_frame_id;
-    info_msg->width = img_response.width;
-    info_msg->height = img_response.height;
-    info_msg->distortion_model = "plumb_bob";
-    info_msg->d = {0, 0, 0, 0, 0};
-
-    double fx = static_cast<double>(img_response.width) / 2;
-    double fy = fx;
-    double cx = fx;
-    double cy = static_cast<double>(img_response.height) / 2;
-
-    info_msg->k = {fx, 0, cx,
-                   0, fy, cy,
-                   0, 0, 1.0};
-
-    info_msg->r = {1, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1};
-
-    info_msg->p = {fx, 0, cx, 0,
-                   0, fy, cy, 0,
-                   0, 0, 1.0, 0};
-
-    info_pub->publish(*info_msg);
+    publish_camera_info(img_response);
 
     fps_statistic.addCount();
 }
@@ -166,9 +146,11 @@ void publish_camera_info(const ImageResponse &img_response)
     info_msg->distortion_model = "plumb_bob";
     info_msg->d = {0, 0, 0, 0, 0};
 
-    double fx = static_cast<double>(img_response.width) / 2.0;
+    const double horizontal_fov_radians = camera_fov_degrees * M_PI / 180.0;
+    double fx = static_cast<double>(img_response.width) /
+                (2.0 * std::tan(horizontal_fov_radians / 2.0));
     double fy = fx;
-    double cx = fx;
+    double cx = static_cast<double>(img_response.width) / 2.0;
     double cy = static_cast<double>(img_response.height) / 2.0;
 
     info_msg->k = {
@@ -202,7 +184,9 @@ void doDepthImageUpdate()
 
     ImageResponse img_response = img_responses[0];
 
-    cv::Mat depth_img = noisify_depthimage(manual_decode_depth(img_response));
+    // AirSim already returns metric DepthPerspective values. Keep the raw
+    // 32-bit depth for SLAM instead of applying the legacy blur/quantization.
+    cv::Mat depth_img = manual_decode_depth(img_response);
     sensor_msgs::msg::Image::SharedPtr img_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "32FC1", depth_img).toImageMsg();
     img_msg->header.stamp = make_ts(img_response.time_stamp);
     img_msg->header.frame_id = camera_frame_id;
@@ -219,10 +203,13 @@ int main(int argc, char ** argv)
 
     // load settings
     camera_name = nh->declare_parameter<std::string>("camera_name", "");
-    camera_frame_prefix = nh->declare_parameter<std::string>("camera_frame_prefix", "/fsds/");
-    camera_frame_id = camera_frame_prefix + camera_name;
+    camera_frame_prefix = nh->declare_parameter<std::string>("camera_frame_prefix", "fsds/");
+    camera_frame_id = nh->declare_parameter<std::string>("frame_id", camera_frame_prefix + camera_name);
+    camera_topic_prefix = nh->declare_parameter<std::string>("camera_topic_prefix", "/fsds/");
+    camera_topic_name = camera_topic_prefix + camera_name;
 
     framerate = nh->declare_parameter<double>("framerate", 0.0);
+    camera_fov_degrees = nh->declare_parameter<double>("fov_degrees", 90.0);
     host_ip = nh->declare_parameter<std::string>("host_ip", "localhost");
     depthcamera = nh->declare_parameter<bool>("depthcamera", false);
 
@@ -256,10 +243,10 @@ int main(int argc, char ** argv)
 
     // ready topic
     const std::string image_topic =
-        camera_frame_id + (depthcamera ? "/image_depth" : "/image_color");
+        camera_topic_name + (depthcamera ? "/image_depth" : "/image_color");
 
     image_pub = nh->create_publisher<sensor_msgs::msg::Image>(image_topic, 1);
-    info_pub = nh->create_publisher<sensor_msgs::msg::CameraInfo>(camera_frame_id + "/camera_info", 1);
+    info_pub = nh->create_publisher<sensor_msgs::msg::CameraInfo>(camera_topic_name + "/camera_info", 1);
 
     // start the loop
     rclcpp::TimerBase::SharedPtr imageTimer = nh->create_wall_timer(dseconds { 1/framerate }, depthcamera ? &doDepthImageUpdate : &doImageUpdate);

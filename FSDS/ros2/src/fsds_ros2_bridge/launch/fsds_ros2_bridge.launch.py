@@ -14,8 +14,13 @@ def generate_launch_description():
     if(not camera_configs):
         print('no cameras configured in ~/Formula-Student-Driverless-Simulator/settings.json')
 
-    camera_nodes = [
-        launch_ros.actions.Node(
+    camera_nodes = []
+    for camera_name, camera_config in camera_configs.items():
+        if not camera_config.get("RosEnabled", True):
+            continue
+
+        capture_config = camera_config["CaptureSettings"][0]
+        camera_nodes.append(launch_ros.actions.Node(
             package='fsds_ros2_bridge',
             executable='fsds_ros2_bridge_camera',
             namespace="fsds/camera", 
@@ -23,11 +28,13 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 {'camera_name': camera_name},
-                {'depthcamera': camera_config["CaptureSettings"][0]["ImageType"] == 2},
-                {'framerate': CAMERA_FRAMERATE},
+                {'frame_id': camera_config.get("RosFrameId", f"fsds/{camera_name}")},
+                {'depthcamera': capture_config["ImageType"] == 2},
+                {'framerate': float(camera_config.get("RosFramerate", CAMERA_FRAMERATE))},
+                {'fov_degrees': float(capture_config["FOV_Degrees"])},
                 {'host_ip': launch.substitutions.LaunchConfiguration('host')},
             ]
-        ) for camera_name, camera_config in camera_configs.items()]
+        ))
 
     ld = launch.LaunchDescription([
 
