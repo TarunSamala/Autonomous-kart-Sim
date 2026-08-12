@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>vio</name>
+  <version>0.1.0</version>
+  <description>Visual-inertial odometry launch and configuration for FSDS development.</description>
+
+  <maintainer email="satvara@example.com">satvara</maintainer>
+  <license>GPL-2.0-only</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>depth_image_proc</exec_depend>
+  <exec_depend>rtabmap_odom</exec_depend>
+  <exec_depend>sensor_interface</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
