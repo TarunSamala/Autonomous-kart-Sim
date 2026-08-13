@@ -6,8 +6,12 @@
 #include "SimMode/SimModeBase.h"
 #include "PIPCamera.h"
 #include "api/ApiServerBase.hpp"
+#include "HAL/PlatformProcess.h"
 #include <memory>
 #include "SimHUD.generated.h"
+
+class STextBlock;
+class SWidget;
 
 
 UENUM(BlueprintType)
@@ -40,10 +44,22 @@ protected:
 private:
     void initializeSubWindows();
     void createMainWidget();
+    void createBridgeControlWidget();
+    void removeBridgeControlWidget();
+    FReply connectRosBridge();
+    FString findBridgeStartScript() const;
+    void updateBridgeProcessState();
+    void setBridgeStatus(const FText& status, const FLinearColor& color);
     
 private:
     typedef common_utils::Utils Utils;
     UClass* widget_class_;
 
     UPROPERTY() USimHUDWidget* widget_;
+
+    TSharedPtr<SWidget> bridge_control_widget_;
+    TSharedPtr<STextBlock> bridge_status_text_;
+    FProcHandle bridge_process_;
+    FTimerHandle bridge_process_timer_;
+    bool bridge_process_was_running_ = false;
 };
