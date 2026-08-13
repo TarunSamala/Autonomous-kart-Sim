@@ -1,0 +1,32 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+workspace_setup="$workspace_root/install/setup.zsh"
+
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
+source /opt/ros/humble/setup.zsh
+
+if [[ ! -f "$workspace_setup" ]]; then
+  print -u2 "bridge-start: workspace is not built: $workspace_setup"
+  exit 1
+fi
+
+source "$workspace_setup"
+
+if ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; then
+  print "bridge-start: bridge is already running; monitoring it"
+  while ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; do
+    sleep 2
+  done
+  exit 0
+fi
+
+exec ros2 launch fsds_ros2_bridge fsds_ros2_bridge.launch.py "$@"

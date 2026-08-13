@@ -1,0 +1,108 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.35
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 160; 160; 160
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Ground Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 50
+      Reference Frame: map
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Color Transformer: RGB8
+      Enabled: true
+      Name: Accumulated RGB Map
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 2
+      Style: Points
+      Topic: /vslam/cloud_map
+      Use Fixed Frame: true
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Color: 255; 80; 20
+      Color Transformer: FlatColor
+      Enabled: true
+      Name: Detected Obstacles
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 5
+      Style: Points
+      Topic: /vslam/cloud_obstacles
+      Use Fixed Frame: true
+      Value: true
+    - Class: rviz_default_plugins/Map
+      Alpha: 0.45
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Occupancy Map
+      Topic: /vslam/map
+      Update Topic: false
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Color Transformer: RGB8
+      Enabled: false
+      Name: Live Depth Cloud
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 2
+      Style: Points
+      Topic: /fsds/front_depth/points
+      Use Fixed Frame: true
+      Value: false
+    - Class: rviz_default_plugins/Path
+      Color: 255; 0; 255
+      Enabled: true
+      Line Style: Lines
+      Line Width: 0.03
+      Name: VSLAM Path
+      Topic: /vslam/global_path
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 20; 20; 20
+    Default Light: true
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 35
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 1.0
+      Target Frame: map
+      Yaw: 0.8
+      Value: Orbit (rviz)
+Window Geometry:
+  Height: 900
+  Width: 1400

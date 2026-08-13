@@ -48,5 +48,15 @@ vslam-start point_cloud:=true
 vslam-start database_path:=/absolute/path/to/map.db
 ```
 
+For an RViz view of the accumulated map, run in another terminal:
+
+```zsh
+vslam-rviz-start
+```
+
+It displays `/vslam/cloud_map`, `/vslam/cloud_obstacles`, `/vslam/map`, and
+the VSLAM path. The live `/fsds/front_depth/points` display is available but
+disabled by default.
+
 Ground truth at `/fsds/testing_only/odom` is reserved for evaluation and is not
 an input to VIO or VSLAM.
