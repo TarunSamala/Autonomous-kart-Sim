@@ -8,6 +8,7 @@ fsds-v2.2.0-linux/
 # Python generated output
 __pycache__/
 *.py[cod]
++.pytest_cache/
 
 # Runtime data
 *.db
