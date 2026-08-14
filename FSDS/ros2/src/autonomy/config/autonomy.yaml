@@ -1,0 +1,39 @@
+cone_detector:
+  ros__parameters:
+    lidar_topic: /fsds/lidar/Lidar1
+    base_frame: fsds/FSCar
+    cluster_radius: 0.25
+    min_cluster_points: 3
+    max_cluster_points: 180
+    min_range: 0.5
+    max_range: 15.0
+    min_z: -0.50
+    max_z: 0.10
+    max_cluster_extent: 0.65
+
+local_planner:
+  ros__parameters:
+    base_frame: fsds/FSCar
+    min_track_width: 1.5
+    max_track_width: 6.0
+    max_longitudinal_offset: 2.0
+    input_timeout: 0.5
+
+pure_pursuit:
+  ros__parameters:
+    enabled: false
+    require_go: true
+    lookahead_distance: 2.5
+    wheelbase: 1.55
+    max_steering_angle: 0.436332
+    straight_throttle: 0.20
+    corner_throttle: 0.11
+    target_speed: 1.50
+    max_speed: 2.00
+    overspeed_brake: 0.50
+    launch_throttle: 0.45
+    launch_release_speed: 0.50
+    launch_timeout: 0.80
+    path_timeout: 0.5
+    speed_timeout: 0.5
+    go_timeout: 4.0
