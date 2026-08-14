@@ -1,0 +1,15 @@
+<launch>
+  <arg name="enabled" default="false"/>
+  <arg name="config" default="$(find-pkg-share autonomy)/config/autonomy.yaml"/>
+
+  <node pkg="autonomy" exec="cone_detector" name="cone_detector" output="screen">
+    <param from="$(var config)"/>
+  </node>
+  <node pkg="autonomy" exec="local_planner" name="local_planner" output="screen">
+    <param from="$(var config)"/>
+  </node>
+  <node pkg="autonomy" exec="pure_pursuit" name="pure_pursuit" output="screen">
+    <param from="$(var config)"/>
+    <param name="enabled" value="$(var enabled)"/>
+  </node>
+</launch>
