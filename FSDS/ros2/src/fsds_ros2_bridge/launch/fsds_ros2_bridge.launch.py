@@ -1,16 +1,29 @@
 import launch
 import launch_ros.actions
 
+import os
 from os.path import expanduser
 import json 
 
 CAMERA_FRAMERATE = 30.0
 
 def generate_launch_description():
-    with open(expanduser("~")+'/Formula-Student-Driverless-Simulator/settings.json', 'r') as file:
+    settings_path = os.environ.get(
+        'FSDS_SETTINGS_PATH',
+        expanduser("~") + '/Formula-Student-Driverless-Simulator/settings.json')
+    with open(settings_path, 'r') as file:
         settings = json.load(file)
 
     camera_configs = settings['Vehicles']['FSCar']['Cameras']
+    sensor_configs = settings['Vehicles']['FSCar'].get('Sensors', {})
+    lidar_frequencies = [
+        float(config['RotationsPerSecond'])
+        for config in sensor_configs.values()
+        if config.get('Enabled', True)
+        and config.get('SensorType') == 6
+        and float(config.get('RotationsPerSecond', 0)) > 0
+    ]
+    lidar_update_period = 1.0 / max(lidar_frequencies) if lidar_frequencies else 0.1
     if(not camera_configs):
         print('no cameras configured in ~/Formula-Student-Driverless-Simulator/settings.json')
 
@@ -58,6 +71,9 @@ def generate_launch_description():
                 {'depth_camera_name': depth_camera_name},
                 {'framerate': float(camera_config.get("RosFramerate", CAMERA_FRAMERATE))},
                 {'fov_degrees': float(capture_config["FOV_Degrees"])},
+                {'depth_fov_degrees': float(
+                    depth_capture["FOV_Degrees"] if depth_camera_name
+                    else capture_config["FOV_Degrees"])},
                 {'host_ip': launch.substitutions.LaunchConfiguration('host')},
             ]
         ))
@@ -113,7 +129,7 @@ def generate_launch_description():
                     'publish_static_tf_every_n_sec': 1.0
                 },
                 {
-                    'update_lidar_every_n_sec': 0.1
+                    'update_lidar_every_n_sec': lidar_update_period
                 },
                 {
                     'host_ip': launch.substitutions.LaunchConfiguration('host')

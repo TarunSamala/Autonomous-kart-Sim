@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>single_test</name>
+  <version>0.1.0</version>
+  <description>Configuration, preparation, lifecycle, and result recording for one FSDS test vehicle.</description>
+
+  <maintainer email="satvara@example.com">satvara</maintainer>
+  <license>GPL-2.0-only</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>fs_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nlohmann-json-dev</depend>
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>yaml-cpp</depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

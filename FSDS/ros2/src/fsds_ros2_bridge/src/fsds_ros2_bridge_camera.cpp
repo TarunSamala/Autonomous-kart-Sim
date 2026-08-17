@@ -42,6 +42,7 @@ std::string depth_camera_name = "";
 std::string depth_camera_topic_name = "";
 double framerate = 0.0;
 double camera_fov_degrees = 90.0;
+double depth_camera_fov_degrees = 90.0;
 std::string host_ip = "localhost";
 bool depthcamera = false;
 bool rgbd_mode = false;
@@ -49,7 +50,8 @@ bool rgbd_mode = false;
 void publish_camera_info(
     const ImageResponse &img_response,
     const rclcpp::Time &stamp,
-    const rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr &publisher);
+    const rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr &publisher,
+    double horizontal_fov_degrees);
 
 rclcpp::Time make_ts(uint64_t unreal_ts)
 {
@@ -124,7 +126,7 @@ void doImageUpdate()
 
     image_pub->publish(*img_msg);
 
-    publish_camera_info(img_response, stamp, info_pub);
+    publish_camera_info(img_response, stamp, info_pub, camera_fov_degrees);
 
     fps_statistic.addCount();
 }
@@ -169,7 +171,8 @@ cv::Mat noisify_depthimage(cv::Mat in)
 void publish_camera_info(
     const ImageResponse &img_response,
     const rclcpp::Time &stamp,
-    const rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr &publisher)
+    const rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr &publisher,
+    const double horizontal_fov_degrees)
 {
     sensor_msgs::msg::CameraInfo::SharedPtr info_msg =
         std::make_shared<sensor_msgs::msg::CameraInfo>();
@@ -181,7 +184,7 @@ void publish_camera_info(
     info_msg->distortion_model = "plumb_bob";
     info_msg->d = {0, 0, 0, 0, 0};
 
-    const double horizontal_fov_radians = camera_fov_degrees * M_PI / 180.0;
+    const double horizontal_fov_radians = horizontal_fov_degrees * M_PI / 180.0;
     double fx = static_cast<double>(img_response.width) /
                 (2.0 * std::tan(horizontal_fov_radians / 2.0));
     double fy = fx;
@@ -226,7 +229,7 @@ void doDepthImageUpdate()
     const auto stamp = make_ts(img_response.time_stamp);
     img_msg->header.stamp = stamp;
     img_msg->header.frame_id = camera_frame_id;
-    publish_camera_info(img_response, stamp, info_pub);
+    publish_camera_info(img_response, stamp, info_pub, camera_fov_degrees);
 
     image_pub->publish(*img_msg);
     fps_statistic.addCount();
@@ -272,8 +275,9 @@ void doRgbdImageUpdate()
 
     image_pub->publish(*rgb_msg);
     depth_image_pub->publish(*depth_msg);
-    publish_camera_info(rgb_response, pair_stamp, info_pub);
-    publish_camera_info(depth_response, pair_stamp, depth_info_pub);
+    publish_camera_info(rgb_response, pair_stamp, info_pub, camera_fov_degrees);
+    publish_camera_info(
+        depth_response, pair_stamp, depth_info_pub, depth_camera_fov_degrees);
     fps_statistic.addCount();
 }
 
@@ -293,6 +297,8 @@ int main(int argc, char ** argv)
 
     framerate = nh->declare_parameter<double>("framerate", 0.0);
     camera_fov_degrees = nh->declare_parameter<double>("fov_degrees", 90.0);
+    depth_camera_fov_degrees = nh->declare_parameter<double>(
+        "depth_fov_degrees", camera_fov_degrees);
     host_ip = nh->declare_parameter<std::string>("host_ip", "localhost");
     depthcamera = nh->declare_parameter<bool>("depthcamera", false);
     rgbd_mode = nh->declare_parameter<bool>("rgbd_mode", false);
@@ -308,6 +314,11 @@ int main(int argc, char ** argv)
     if(!std::isfinite(camera_fov_degrees) ||
        camera_fov_degrees <= 0.0 || camera_fov_degrees >= 180.0) {
         RCLCPP_FATAL(nh->get_logger(), "fov_degrees must be within (0, 180).");
+        return 1;
+    }
+    if(!std::isfinite(depth_camera_fov_degrees) ||
+       depth_camera_fov_degrees <= 0.0 || depth_camera_fov_degrees >= 180.0) {
+        RCLCPP_FATAL(nh->get_logger(), "depth_fov_degrees must be within (0, 180).");
         return 1;
     }
     if(rgbd_mode && depth_camera_name.empty()) {
