@@ -16,16 +16,19 @@
 
 namespace BenchmarkTheme
 {
-const FLinearColor Backdrop(0.004f, 0.007f, 0.012f, 0.94f);
-const FLinearColor Surface(0.018f, 0.026f, 0.039f, 0.98f);
-const FLinearColor SurfaceRaised(0.028f, 0.039f, 0.056f, 1.0f);
-const FLinearColor SurfaceSoft(0.038f, 0.051f, 0.071f, 0.9f);
-const FLinearColor Border(0.09f, 0.13f, 0.18f, 1.0f);
-const FLinearColor Text(0.91f, 0.94f, 0.97f, 1.0f);
-const FLinearColor TextMuted(0.47f, 0.55f, 0.64f, 1.0f);
-const FLinearColor Accent(0.0f, 0.78f, 0.94f, 1.0f);
-const FLinearColor AccentHover(0.08f, 0.88f, 1.0f, 1.0f);
-const FLinearColor AccentPressed(0.0f, 0.62f, 0.78f, 1.0f);
+// The simulator remains visible beneath a restrained, cinematic veil. The
+// translucency is deliberate: this is a benchmark tool running over a live
+// test environment, not a detached desktop settings window.
+const FLinearColor Backdrop(0.002f, 0.004f, 0.006f, 0.76f);
+const FLinearColor Surface(0.008f, 0.012f, 0.016f, 0.62f);
+const FLinearColor SurfaceRaised(0.035f, 0.043f, 0.048f, 0.72f);
+const FLinearColor SurfaceSoft(0.075f, 0.085f, 0.09f, 0.52f);
+const FLinearColor Border(0.55f, 0.59f, 0.60f, 0.28f);
+const FLinearColor Text(0.90f, 0.91f, 0.89f, 1.0f);
+const FLinearColor TextMuted(0.52f, 0.55f, 0.55f, 1.0f);
+const FLinearColor Accent(0.22f, 0.82f, 0.86f, 1.0f);
+const FLinearColor AccentHover(0.37f, 0.93f, 0.95f, 1.0f);
+const FLinearColor AccentPressed(0.12f, 0.67f, 0.72f, 1.0f);
 const FLinearColor Success(0.22f, 0.91f, 0.55f, 1.0f);
 const FLinearColor Warning(1.0f, 0.68f, 0.18f, 1.0f);
 const FLinearColor Danger(1.0f, 0.28f, 0.28f, 1.0f);
@@ -103,11 +106,11 @@ void SBenchmarkMenu::Construct(const FArguments& InArgs)
             .BorderBackgroundColor(BenchmarkTheme::Backdrop)
         ]
         + SOverlay::Slot()
-        .Padding(FMargin(34.0f, 28.0f))
+        .Padding(FMargin(52.0f, 38.0f))
         [
             SNew(SBorder)
             .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(BenchmarkTheme::Surface)
+            .BorderBackgroundColor(FLinearColor::Transparent)
             .Padding(0.0f)
             [
                 SNew(SVerticalBox)
@@ -145,8 +148,8 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildHeader()
 {
     return SNew(SBorder)
         .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(BenchmarkTheme::SurfaceRaised)
-        .Padding(FMargin(26.0f, 17.0f))
+        .BorderBackgroundColor(FLinearColor(0.004f, 0.007f, 0.009f, 0.34f))
+        .Padding(FMargin(18.0f, 12.0f, 18.0f, 20.0f))
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot()
@@ -155,7 +158,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildHeader()
             [
                 SNew(SBox)
                 .WidthOverride(5.0f)
-                .HeightOverride(38.0f)
+                .HeightOverride(46.0f)
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
@@ -172,15 +175,15 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildHeader()
                 .AutoHeight()
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("AUTONOMY BENCHMARK")))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 19))
+                    .Text(FText::FromString(TEXT("DRIVERLESS  /  BENCHMARK")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 22))
                     .ColorAndOpacity(BenchmarkTheme::Text)
                 ]
                 + SVerticalBox::Slot()
                 .AutoHeight()
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("FORMULA STUDENT DRIVERLESS SIMULATOR")))
+                    .Text(FText::FromString(TEXT("AUTONOMY PERFORMANCE LAB  ·  FORMULA STUDENT DRIVERLESS SIMULATOR")))
                     .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
                     .ColorAndOpacity(BenchmarkTheme::TextMuted)
                 ]
@@ -197,7 +200,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildHeader()
             [
                 SNew(SBorder)
                 .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                .BorderBackgroundColor(FLinearColor(0.03f, 0.11f, 0.12f, 1.0f))
+                .BorderBackgroundColor(FLinearColor(0.04f, 0.12f, 0.13f, 0.68f))
                 .Padding(FMargin(11.0f, 6.0f))
                 [
                     SNew(STextBlock)
@@ -228,12 +231,12 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildHeader()
 TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
 {
     return SNew(SBox)
-        .WidthOverride(220.0f)
+        .WidthOverride(252.0f)
         [
             SNew(SBorder)
             .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.012f, 0.018f, 0.028f, 1.0f))
-            .Padding(FMargin(16.0f, 22.0f))
+            .BorderBackgroundColor(FLinearColor(0.004f, 0.008f, 0.010f, 0.48f))
+            .Padding(FMargin(18.0f, 24.0f, 24.0f, 18.0f))
             [
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot()
@@ -241,7 +244,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                 .Padding(8.0f, 0.0f, 0.0f, 13.0f)
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("BENCHMARK MODES")))
+                    .Text(FText::FromString(TEXT("TEST MODE")))
                     .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
                     .ColorAndOpacity(BenchmarkTheme::TextMuted)
                 ]
@@ -250,7 +253,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(FLinearColor(0.02f, 0.16f, 0.19f, 1.0f))
+                    .BorderBackgroundColor(FLinearColor(0.08f, 0.23f, 0.24f, 0.72f))
                     .Padding(FMargin(13.0f, 13.0f))
                     [
                         SNew(SVerticalBox)
@@ -258,7 +261,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                         .AutoHeight()
                         [
                             SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("01   SINGLE TEST")))
+                            .Text(FText::FromString(TEXT("01    SINGLE TEST")))
                             .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
                             .ColorAndOpacity(BenchmarkTheme::Text)
                         ]
@@ -279,7 +282,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(BenchmarkTheme::Surface)
+                    .BorderBackgroundColor(FLinearColor::Transparent)
                     .Padding(FMargin(13.0f, 13.0f))
                     [
                         SNew(SVerticalBox)
@@ -287,7 +290,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                         .AutoHeight()
                         [
                             SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("02   MULTI TEST")))
+                            .Text(FText::FromString(TEXT("02    MULTI TEST")))
                             .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
                             .ColorAndOpacity(BenchmarkTheme::TextMuted)
                         ]
@@ -307,7 +310,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                 .Padding(8.0f, 28.0f, 0.0f, 12.0f)
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("PIPELINE")))
+                    .Text(FText::FromString(TEXT("AUTONOMY STACK")))
                     .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
                     .ColorAndOpacity(BenchmarkTheme::TextMuted)
                 ]
@@ -344,8 +347,8 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
 {
     return SNew(SBorder)
         .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(BenchmarkTheme::Surface)
-        .Padding(FMargin(28.0f, 24.0f))
+        .BorderBackgroundColor(FLinearColor(0.006f, 0.009f, 0.012f, 0.42f))
+        .Padding(FMargin(38.0f, 26.0f, 34.0f, 24.0f))
         [
             SNew(SScrollBox)
             + SScrollBox::Slot()
@@ -355,8 +358,8 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 .AutoHeight()
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("CONFIGURE SINGLE TEST")))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 26))
+                    .Text(FText::FromString(TEXT("Sensor Configuration")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 28))
                     .ColorAndOpacity(BenchmarkTheme::Text)
                 ]
                 + SVerticalBox::Slot()
@@ -364,8 +367,8 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 .Padding(0.0f, 7.0f, 0.0f, 24.0f)
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("Build a reproducible sensor contract. Every run stores the exact profile in its benchmark manifest.")))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
+                    .Text(FText::FromString(TEXT("Define the perception hardware contract used for this benchmark run.")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 11))
                     .ColorAndOpacity(BenchmarkTheme::TextMuted)
                     .AutoWrapText(true)
                 ]
@@ -374,8 +377,8 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(BenchmarkTheme::SurfaceRaised)
-                    .Padding(FMargin(18.0f, 15.0f))
+                    .BorderBackgroundColor(FLinearColor::Transparent)
+                    .Padding(FMargin(10.0f, 12.0f))
                     [
                         SNew(SHorizontalBox)
                         + SHorizontalBox::Slot()
@@ -385,15 +388,15 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                             + SVerticalBox::Slot().AutoHeight()
                             [
                                 SNew(STextBlock)
-                                .Text(FText::FromString(TEXT("TRACK / ENVIRONMENT")))
+                                .Text(FText::FromString(TEXT("TEST ENVIRONMENT")))
                                 .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
                                 .ColorAndOpacity(BenchmarkTheme::TextMuted)
                             ]
                             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 6.0f, 0.0f, 0.0f)
                             [
                                 SNew(STextBlock)
-                                .Text(FText::FromString(TEXT("Training Map")))
-                                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 15))
+                                .Text(FText::FromString(TEXT("FSDS Training Track")))
+                                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))
                                 .ColorAndOpacity(BenchmarkTheme::Text)
                             ]
                         ]
@@ -403,7 +406,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                         [
                             SNew(SBorder)
                             .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                            .BorderBackgroundColor(FLinearColor(0.04f, 0.12f, 0.13f, 1.0f))
+                            .BorderBackgroundColor(FLinearColor(0.04f, 0.12f, 0.13f, 0.58f))
                             .Padding(FMargin(10.0f, 6.0f))
                             [
                                 SNew(STextBlock)
@@ -419,9 +422,9 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 .Padding(0.0f, 14.0f, 0.0f, 0.0f)
                 [
                     BuildSensorSelector(
-                        FText::FromString(TEXT("PRIMARY RANGE SENSOR")),
+                        FText::FromString(TEXT("RANGE SENSOR")),
                         FText::FromString(TEXT("LiDAR")),
-                        FText::FromString(TEXT("Select a hardware-inspired scan contract.")),
+                        FText::FromString(TEXT("LiDAR profile")),
                         &LidarOptions,
                         &SelectedLidar,
                         &LidarComboBox)
@@ -431,9 +434,9 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 .Padding(0.0f, 14.0f, 0.0f, 0.0f)
                 [
                     BuildSensorSelector(
-                        FText::FromString(TEXT("PRIMARY VISION SENSOR")),
-                        FText::FromString(TEXT("RGB-D Camera")),
-                        FText::FromString(TEXT("Select a depth-camera stream and optical contract.")),
+                        FText::FromString(TEXT("VISION SENSOR")),
+                        FText::FromString(TEXT("Depth Camera")),
+                        FText::FromString(TEXT("RGB-D profile")),
                         &DepthOptions,
                         &SelectedDepth,
                         &DepthComboBox)
@@ -444,11 +447,11 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(FLinearColor(0.055f, 0.045f, 0.022f, 1.0f))
+                    .BorderBackgroundColor(FLinearColor(0.12f, 0.075f, 0.018f, 0.46f))
                     .Padding(FMargin(15.0f, 12.0f))
                     [
                         SNew(STextBlock)
-                        .Text(FText::FromString(TEXT("SIMULATION FIDELITY  /  Profiles reproduce stream geometry and timing. Physical optics, weather response, transport latency and hardware noise are not yet modelled.")))
+                        .Text(FText::FromString(TEXT("SIMULATION NOTE  ·  Profiles reproduce geometry and timing. Hardware noise, optics and transport latency are not yet modelled.")))
                         .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
                         .ColorAndOpacity(BenchmarkTheme::Warning)
                         .AutoWrapText(true)
@@ -461,40 +464,42 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
 TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
 {
     return SNew(SBox)
-        .WidthOverride(330.0f)
+        .WidthOverride(400.0f)
         [
             SNew(SBorder)
             .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.014f, 0.022f, 0.032f, 1.0f))
-            .Padding(FMargin(22.0f, 24.0f))
+            .BorderBackgroundColor(FLinearColor(0.003f, 0.006f, 0.008f, 0.60f))
+            .Padding(FMargin(34.0f, 26.0f, 26.0f, 20.0f))
             [
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight()
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("RUN SUMMARY")))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 16))
+                    .Text(FText::FromString(TEXT("Sensor Benchmark")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 20))
                     .ColorAndOpacity(BenchmarkTheme::Text)
                 ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 5.0f, 0.0f, 20.0f)
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 0.0f, 24.0f)
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("Configuration preview")))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
+                    .Text(FText::FromString(TEXT("Compares autonomy performance under a reproducible perception loadout. The exact sensor profile is written into the run manifest so results remain traceable.")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 11))
                     .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                    .AutoWrapText(true)
+                    .LineHeightPercentage(1.35f)
                 ]
                 + SVerticalBox::Slot().AutoHeight()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(BenchmarkTheme::SurfaceRaised)
-                    .Padding(FMargin(15.0f))
+                    .BorderBackgroundColor(FLinearColor(0.08f, 0.09f, 0.09f, 0.44f))
+                    .Padding(FMargin(18.0f))
                     [
                         SNew(SVerticalBox)
                         + SVerticalBox::Slot().AutoHeight()
                         [
                             SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("SENSOR LOADOUT")))
+                            .Text(FText::FromString(TEXT("SELECTED LOADOUT")))
                             .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
                             .ColorAndOpacity(BenchmarkTheme::TextMuted)
                         ]
@@ -502,14 +507,14 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                         [
                             SNew(STextBlock)
                             .Text(this, &SBenchmarkMenu::GetSelectedLidarLabel)
-                            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
+                            .Font(FCoreStyle::GetDefaultFontStyle("Regular", 12))
                             .ColorAndOpacity(BenchmarkTheme::Text)
                         ]
                         + SVerticalBox::Slot().AutoHeight()
                         [
                             SNew(STextBlock)
                             .Text(this, &SBenchmarkMenu::GetSelectedDepthLabel)
-                            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
+                            .Font(FCoreStyle::GetDefaultFontStyle("Regular", 12))
                             .ColorAndOpacity(BenchmarkTheme::Text)
                         ]
                         + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 0.0f, 0.0f)
@@ -530,7 +535,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                 + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 18.0f, 0.0f, 6.0f)
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString(TEXT("ROS 2 BRIDGE")))
+                    .Text(FText::FromString(TEXT("SIMULATOR CONNECTION")))
                     .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
                     .ColorAndOpacity(BenchmarkTheme::TextMuted)
                 ]
@@ -549,7 +554,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                     .OnClicked(this, &SBenchmarkMenu::HandleConnectBridge)
                     [
                         SNew(STextBlock)
-                        .Text(FText::FromString(TEXT("CONNECT ROS 2 BRIDGE")))
+                        .Text(FText::FromString(TEXT("CONNECT ROS 2")))
                         .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
                         .ColorAndOpacity(BenchmarkTheme::Text)
                     ]
@@ -561,7 +566,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                 + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 8.0f)
                 [
                     SAssignNew(PreparationStatusText, STextBlock)
-                    .Text(FText::FromString(TEXT("SELECT A CONFIGURATION")))
+                    .Text(FText::FromString(TEXT("READY TO PREPARE")))
                     .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
                     .ColorAndOpacity(BenchmarkTheme::TextMuted)
                     .AutoWrapText(true)
@@ -575,7 +580,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                     .OnClicked(this, &SBenchmarkMenu::HandlePrepareBenchmark)
                     [
                         SNew(STextBlock)
-                        .Text(FText::FromString(TEXT("PREPARE BENCHMARK")))
+                        .Text(FText::FromString(TEXT("APPLY & PREPARE TEST")))
                         .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
                         .ColorAndOpacity(FLinearColor(0.0f, 0.06f, 0.08f, 1.0f))
                     ]
@@ -604,62 +609,76 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
 
     return SNew(SBorder)
         .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(BenchmarkTheme::SurfaceRaised)
-        .Padding(FMargin(18.0f))
+        .BorderBackgroundColor(FLinearColor(0.02f, 0.025f, 0.027f, 0.28f))
+        .Padding(FMargin(18.0f, 16.0f))
         [
-            SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight()
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot()
+            .FillWidth(0.42f)
+            .VAlign(VAlign_Center)
             [
-                SNew(STextBlock)
-                .Text(Eyebrow)
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
-                .ColorAndOpacity(BenchmarkTheme::Accent)
+                SNew(SVerticalBox)
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(STextBlock)
+                    .Text(Eyebrow)
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
+                    .ColorAndOpacity(BenchmarkTheme::Accent)
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 7.0f, 0.0f, 3.0f)
+                [
+                    SNew(STextBlock)
+                    .Text(Title)
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 18))
+                    .ColorAndOpacity(BenchmarkTheme::Text)
+                ]
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(STextBlock)
+                    .Text(Description)
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
+                    .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                ]
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 5.0f, 0.0f, 2.0f)
+            + SHorizontalBox::Slot()
+            .FillWidth(0.58f)
+            .Padding(24.0f, 0.0f, 0.0f, 0.0f)
+            .VAlign(VAlign_Center)
             [
-                SNew(STextBlock)
-                .Text(Title)
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 17))
-                .ColorAndOpacity(BenchmarkTheme::Text)
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 13.0f)
-            [
-                SNew(STextBlock)
-                .Text(Description)
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
-                .ColorAndOpacity(BenchmarkTheme::TextMuted)
-            ]
-            + SVerticalBox::Slot().AutoHeight()
-            [
-                SAssignNew(*ComboBox, SComboBox<FProfileOptionPtr>)
-                .OptionsSource(Options)
-                .InitiallySelectedItem(*Selected)
-                .OnGenerateWidget(this, &SBenchmarkMenu::GenerateProfileOption)
-                .OnSelectionChanged(
-                    this,
-                    IsLidar ? &SBenchmarkMenu::SelectLidar : &SBenchmarkMenu::SelectDepth)
-                .ContentPadding(FMargin(12.0f, 8.0f))
+                SNew(SVerticalBox)
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SAssignNew(*ComboBox, SComboBox<FProfileOptionPtr>)
+                    .OptionsSource(Options)
+                    .InitiallySelectedItem(*Selected)
+                    .OnGenerateWidget(this, &SBenchmarkMenu::GenerateProfileOption)
+                    .OnSelectionChanged(
+                        this,
+                        IsLidar ? &SBenchmarkMenu::SelectLidar : &SBenchmarkMenu::SelectDepth)
+                    .ContentPadding(FMargin(14.0f, 9.0f))
+                    [
+                        SNew(STextBlock)
+                        .Text(IsLidar
+                            ? TAttribute<FText>::Create(
+                                TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedLidarLabel))
+                            : TAttribute<FText>::Create(
+                                TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedDepthLabel)))
+                        .Font(FCoreStyle::GetDefaultFontStyle("Regular", 12))
+                        .ColorAndOpacity(BenchmarkTheme::Text)
+                    ]
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(2.0f, 9.0f, 0.0f, 0.0f)
                 [
                     SNew(STextBlock)
                     .Text(IsLidar
                         ? TAttribute<FText>::Create(
-                            TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedLidarLabel))
+                            TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetLidarDescription))
                         : TAttribute<FText>::Create(
-                            TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedDepthLabel)))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
-                    .ColorAndOpacity(BenchmarkTheme::Text)
+                            TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetDepthDescription)))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
+                    .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                    .AutoWrapText(true)
                 ]
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
-            [
-                SNew(STextBlock)
-                .Text(IsLidar
-                    ? TAttribute<FText>::Create(
-                        TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetLidarDescription))
-                    : TAttribute<FText>::Create(
-                        TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetDepthDescription)))
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
-                .ColorAndOpacity(BenchmarkTheme::TextMuted)
             ]
         ];
 }
