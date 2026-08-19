@@ -5,7 +5,7 @@ set -e
 script_path="${0:A}"
 
 if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
-  exec distrobox enter kart-ros2-humble -- "$script_path" "$@"
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
 fi
 
 workspace_root="${script_path:h:h}"

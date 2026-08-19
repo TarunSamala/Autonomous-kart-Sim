@@ -72,6 +72,7 @@ private:
     FProcHandle preparation_process_;
     FTimerHandle preparation_process_timer_;
     bool preparation_process_was_running_ = false;
+    double preparation_started_at_seconds_ = 0.0;
     bool benchmark_menu_visible_ = true;
     bool screen_message_suppression_active_ = false;
     bool screen_messages_were_enabled_ = true;

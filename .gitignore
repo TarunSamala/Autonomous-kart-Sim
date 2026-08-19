@@ -16,3 +16,4 @@ __pycache__/
 *.mcap
 FSDS/ros2/generated/
 FSDS/ros2/results/
+FSDS/settings.json.pre-single-test

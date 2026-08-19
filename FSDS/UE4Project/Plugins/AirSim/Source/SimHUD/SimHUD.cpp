@@ -345,7 +345,14 @@ void ASimHUD::prepareSingleTest(
         return;
     }
 
+    preparation_started_at_seconds_ = FPlatformTime::Seconds();
     preparation_process_was_running_ = true;
+    UE_LOG(
+        LogTemp,
+        Display,
+        TEXT("Benchmark prepare: started %s %s"),
+        *script_path,
+        *arguments);
     GetWorldTimerManager().SetTimer(
         preparation_process_timer_,
         this,
@@ -388,6 +395,24 @@ void ASimHUD::updatePreparationProcessState()
 
     if (is_running)
     {
+        constexpr double PreparationTimeoutSeconds = 30.0;
+        const double elapsed_seconds =
+            FPlatformTime::Seconds() - preparation_started_at_seconds_;
+        if (elapsed_seconds > PreparationTimeoutSeconds)
+        {
+            FPlatformProcess::TerminateProc(preparation_process_, true);
+            preparation_process_was_running_ = false;
+            GetWorldTimerManager().ClearTimer(preparation_process_timer_);
+            UE_LOG(LogTemp, Error, TEXT("Benchmark prepare: timed out after %.1f seconds"), elapsed_seconds);
+            if (benchmark_menu_.IsValid())
+            {
+                benchmark_menu_->SetPreparationStatus(
+                    FText::FromString(TEXT("PREPARATION TIMED OUT / CHECK DISTROBOX")),
+                    FLinearColor(1.0f, 0.28f, 0.28f));
+            }
+            return;
+        }
+
         preparation_process_was_running_ = true;
         if (benchmark_menu_.IsValid())
         {
@@ -404,6 +429,23 @@ void ASimHUD::updatePreparationProcessState()
         const bool has_return_code = preparation_process_.IsValid()
             && FPlatformProcess::GetProcReturnCode(preparation_process_, &return_code);
         const bool succeeded = has_return_code && return_code == 0;
+
+        if (succeeded)
+        {
+            UE_LOG(
+                LogTemp,
+                Display,
+                TEXT("Benchmark prepare: finished with return code %d"),
+                return_code);
+        }
+        else
+        {
+            UE_LOG(
+                LogTemp,
+                Error,
+                TEXT("Benchmark prepare: finished with return code %d"),
+                has_return_code ? return_code : -1);
+        }
 
         if (benchmark_menu_.IsValid())
         {
