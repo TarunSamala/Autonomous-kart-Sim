@@ -1,0 +1,12 @@
+schema_version: 1
+
+test:
+  id: a3m1_d455_mapping_prep
+  track: TrainingMap
+  max_duration_s: 600.0
+  operation: manual
+
+sensors:
+  lidar: a3m1
+  depth_camera: d455
+  chassis_imu: true

@@ -1,0 +1,25 @@
+<launch>
+  <arg name="point_cloud" default="true"
+       description="Create a metric point cloud from the selected depth stream."/>
+  <arg name="rviz" default="true"
+       description="Start RViz with the Single Test sensor layout."/>
+  <arg name="use_sim_time" default="false"/>
+  <arg name="rviz_config"
+       default="$(find-pkg-share single_test)/config/sensors.rviz"/>
+
+  <!-- This node uses depth calibration directly, so D415/D435 profiles remain
+       correct even though their simulated RGB and depth fields of view differ. -->
+  <node pkg="depth_image_proc" exec="point_cloud_xyz_node"
+        name="single_test_depth_points" output="screen"
+        if="$(var point_cloud)">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <remap from="image_rect" to="/fsds/front_depth/image_depth"/>
+    <remap from="camera_info" to="/fsds/front_depth/camera_info"/>
+    <remap from="points" to="/fsds/front_depth/points"/>
+  </node>
+
+  <node pkg="rviz2" exec="rviz2" name="single_test_rviz"
+        args="-d $(var rviz_config)" output="screen" if="$(var rviz)">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </node>
+</launch>

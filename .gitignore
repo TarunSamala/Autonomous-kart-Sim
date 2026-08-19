@@ -8,9 +8,12 @@ fsds-v2.2.0-linux/
 # Python generated output
 __pycache__/
 *.py[cod]
-+.pytest_cache/
+.pytest_cache/
 
 # Runtime data
 *.db
 *.db3
 *.mcap
+FSDS/ros2/generated/
+FSDS/ros2/results/
+FSDS/settings.json.pre-single-test

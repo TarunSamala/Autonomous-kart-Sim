@@ -12,6 +12,7 @@ The autonomy workspace uses concise ROS package names without a project prefix:
 
 ```text
 interfaces
+single_test
 sensor_interface
 teleop
 vio
@@ -19,9 +20,11 @@ vslam
 state_estimator
 perception
 control
+autonomy
 ```
 
-Only `teleop` is migrated so far, under `FSDS/ros2/src/teleop`. The remaining
-packages will be introduced there as their interfaces and implementations are defined. The older
-`fsds-autonomous-driving` repository is an archive and is not part of this
-workspace.
+Implemented baselines currently include Single Test preparation/recording,
+sensor adapters, keyboard teleoperation, RGB-D odometry, RTAB-Map VSLAM, and a
+C++ LiDAR/Pure-Pursuit autonomy pipeline. Planned packages will be introduced as
+their common interfaces are defined. The older `fsds-autonomous-driving`
+repository is an archive and is not part of this workspace.

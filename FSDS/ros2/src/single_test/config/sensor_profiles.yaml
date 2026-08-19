@@ -1,0 +1,115 @@
+schema_version: 1
+
+# These profiles reproduce the externally visible scan/capture contract that
+# FSDS can model. They do not claim to reproduce optics, sunlight response,
+# rolling/global shutter artifacts, USB latency, or physical stereo disparity.
+lidar:
+  a1m8:
+    label: SLAMTEC RPLIDAR A1M8
+    manufacturer: SLAMTEC
+    model: A1M8
+    source_url: https://www.slamtec.com/en/support
+    range_m: 12.0
+    number_of_lasers: 1
+    points_per_scan: 1600
+    rotations_per_second: 5
+    horizontal_fov_start_deg: -180.0
+    horizontal_fov_end_deg: 180.0
+    vertical_fov_lower_deg: 0.0
+    vertical_fov_upper_deg: 0.0
+    fidelity_note: FSDS requires integer rotation Hz; 5 Hz x 1600 preserves the 8 kHz sample mode near the nominal 5.5 Hz scan rate.
+
+  a3m1:
+    label: SLAMTEC RPLIDAR A3M1
+    manufacturer: SLAMTEC
+    model: A3M1
+    source_url: https://www.slamtec.com/en/support
+    range_m: 25.0
+    number_of_lasers: 1
+    points_per_scan: 1600
+    rotations_per_second: 10
+    horizontal_fov_start_deg: -180.0
+    horizontal_fov_end_deg: 180.0
+    vertical_fov_lower_deg: 0.0
+    vertical_fov_upper_deg: 0.0
+    fidelity_note: Represents the 16 kHz, 10 Hz, 360 degree scan contract; material-dependent range and sunlight behavior are not simulated.
+
+  fsds_16:
+    label: FSDS 16-layer development LiDAR
+    manufacturer: FSDS
+    model: simulated-16
+    source_url: https://fs-driverless.github.io/Formula-Student-Driverless-Simulator/v2.2.0/lidar/
+    range_m: 100.0
+    number_of_lasers: 16
+    points_per_scan: 4096
+    rotations_per_second: 10
+    horizontal_fov_start_deg: -90.0
+    horizontal_fov_end_deg: 90.0
+    vertical_fov_lower_deg: -20.0
+    vertical_fov_upper_deg: 5.0
+    fidelity_note: Native development profile; not a named physical product.
+
+depth_camera:
+  hp60c:
+    label: YDLIDAR HP60C
+    manufacturer: YDLIDAR
+    model: HP60C
+    source_url: https://www.ydlidar.com/product/ydlidar-hp60c
+    width: 640
+    height: 480
+    frames_per_second: 20.0
+    rgb_horizontal_fov_deg: 80.9
+    depth_horizontal_fov_deg: 73.8
+    min_depth_m: 0.2
+    max_depth_m: 4.0
+    baseline_mm: null
+    integrated_imu: false
+    fidelity_note: Uses the recommended 640x480 RGB and 640x480 RAW16 depth contract. HP60C is a structured-light RGB-D camera, not a scanning LiDAR; FSDS does not reproduce its 940nm projector, fill rate, depth noise, indoor-light limitations, USB 2.0 transport, or sub-2mm-at-1m plane-accuracy claim.
+
+  d415:
+    label: Intel RealSense D415
+    manufacturer: Intel RealSense
+    model: D415
+    source_url: https://www.intelrealsense.com/wp-content/uploads/2022/04/Intel-RealSense-D400-Series-Datasheet-April-2022.pdf
+    width: 1280
+    height: 720
+    frames_per_second: 30.0
+    rgb_horizontal_fov_deg: 69.4
+    depth_horizontal_fov_deg: 65.0
+    min_depth_m: 0.16
+    max_depth_m: 10.0
+    baseline_mm: 55.0
+    integrated_imu: false
+    fidelity_note: Mapping-oriented 30 FPS mode; FSDS does not reproduce stereo baseline, projector, shutter, or optical noise.
+
+  d435:
+    label: Intel RealSense D435
+    manufacturer: Intel RealSense
+    model: D435
+    source_url: https://www.intelrealsense.com/wp-content/uploads/2022/04/Intel-RealSense-D400-Series-Datasheet-April-2022.pdf
+    width: 848
+    height: 480
+    frames_per_second: 30.0
+    rgb_horizontal_fov_deg: 69.0
+    depth_horizontal_fov_deg: 87.0
+    min_depth_m: 0.105
+    max_depth_m: 10.0
+    baseline_mm: 50.0
+    integrated_imu: false
+    fidelity_note: Mapping-oriented 30 FPS mode; FSDS renders metric depth and does not reproduce physical stereo artifacts.
+
+  d455:
+    label: Intel RealSense D455
+    manufacturer: Intel RealSense
+    model: D455
+    source_url: https://www.intelrealsense.com/wp-content/uploads/2022/04/Intel-RealSense-D400-Series-Datasheet-April-2022.pdf
+    width: 848
+    height: 480
+    frames_per_second: 30.0
+    rgb_horizontal_fov_deg: 86.0
+    depth_horizontal_fov_deg: 86.0
+    min_depth_m: 0.4
+    max_depth_m: 6.0
+    baseline_mm: 95.0
+    integrated_imu: true
+    fidelity_note: Uses the selected D455 mapping stream and working range; FSDS cannot model the stereo baseline or a separate camera-mounted IMU.

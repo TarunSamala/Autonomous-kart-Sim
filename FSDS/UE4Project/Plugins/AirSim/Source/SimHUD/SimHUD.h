@@ -12,6 +12,8 @@
 
 class STextBlock;
 class SWidget;
+class SBenchmarkMenu;
+class UBenchmarkMenuHost;
 
 
 UENUM(BlueprintType)
@@ -31,6 +33,7 @@ public:
 
 public:
     void inputEventToggleHelp();
+    void inputEventToggleBenchmarkMenu();
     
     ASimHUD();
     virtual void BeginPlay() override;
@@ -50,6 +53,10 @@ private:
     FString findBridgeStartScript() const;
     void updateBridgeProcessState();
     void setBridgeStatus(const FText& status, const FLinearColor& color);
+    void prepareSingleTest(const FString& lidar_profile, const FString& depth_profile);
+    FString findSingleTestPrepareScript() const;
+    void updatePreparationProcessState();
+    void setBenchmarkMenuVisible(bool visible);
     
 private:
     typedef common_utils::Utils Utils;
@@ -57,9 +64,16 @@ private:
 
     UPROPERTY() USimHUDWidget* widget_;
 
-    TSharedPtr<SWidget> bridge_control_widget_;
-    TSharedPtr<STextBlock> bridge_status_text_;
+    UPROPERTY() UBenchmarkMenuHost* benchmark_menu_host_;
+    TSharedPtr<SBenchmarkMenu> benchmark_menu_;
     FProcHandle bridge_process_;
     FTimerHandle bridge_process_timer_;
     bool bridge_process_was_running_ = false;
+    FProcHandle preparation_process_;
+    FTimerHandle preparation_process_timer_;
+    bool preparation_process_was_running_ = false;
+    double preparation_started_at_seconds_ = 0.0;
+    bool benchmark_menu_visible_ = true;
+    bool screen_message_suppression_active_ = false;
+    bool screen_messages_were_enabled_ = true;
 };
