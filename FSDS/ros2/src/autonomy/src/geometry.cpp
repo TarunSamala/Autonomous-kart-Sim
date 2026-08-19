@@ -41,6 +41,44 @@ std::vector<Point2> pair_cones(
   return midpoints;
 }
 
+std::vector<Point2> centerline_from_boundary(
+  const std::vector<Point2> & boundary, const bool boundary_is_left,
+  const double half_track_width)
+{
+  if (boundary.size() < 2 || half_track_width <= 0.0) {
+    return {};
+  }
+
+  auto ordered = boundary;
+  std::sort(ordered.begin(), ordered.end(), [](const Point2 & a, const Point2 & b) {
+    return a.x < b.x;
+  });
+
+  std::vector<Point2> centerline;
+  centerline.reserve(ordered.size());
+  for (std::size_t i = 0; i < ordered.size(); ++i) {
+    const Point2 & previous = ordered[i == 0 ? i : i - 1];
+    const Point2 & next = ordered[i + 1 < ordered.size() ? i + 1 : i];
+    const double tangent_x = next.x - previous.x;
+    const double tangent_y = next.y - previous.y;
+    const double tangent_length = std::hypot(tangent_x, tangent_y);
+    if (tangent_length < 1e-6) {
+      continue;
+    }
+
+    const double unit_x = tangent_x / tangent_length;
+    const double unit_y = tangent_y / tangent_length;
+    const double side = boundary_is_left ? 1.0 : -1.0;
+    Point2 center{
+      ordered[i].x + side * unit_y * half_track_width,
+      ordered[i].y - side * unit_x * half_track_width};
+    if (center.x > 0.0) {
+      centerline.push_back(center);
+    }
+  }
+  return centerline;
+}
+
 std::vector<Point2> smooth_path(const std::vector<Point2> & points)
 {
   if (points.size() < 3) {return points;}

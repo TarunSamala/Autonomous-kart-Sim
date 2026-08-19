@@ -10,6 +10,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     publish_tf = LaunchConfiguration('publish_tf')
     point_cloud = LaunchConfiguration('point_cloud')
+    odom_frame = LaunchConfiguration('odom_frame')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -26,6 +27,10 @@ def generate_launch_description():
             'point_cloud',
             default_value='true',
             description='Generate a registered colored point cloud.'),
+        DeclareLaunchArgument(
+            'odom_frame',
+            default_value='vio/odom',
+            description='Parent frame used by the VIO odometry and optional TF.'),
 
         # FSDS v2.2 does not model a separately positioned camera IMU. This
         # adapter creates the correct software contract while preserving the
@@ -88,7 +93,7 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'frame_id': 'fsds/FSCar',
-                'odom_frame_id': 'vio/odom',
+                'odom_frame_id': odom_frame,
                 'publish_tf': ParameterValue(publish_tf, value_type=bool),
                 'wait_for_transform': 0.2,
                 'wait_imu_to_init': True,

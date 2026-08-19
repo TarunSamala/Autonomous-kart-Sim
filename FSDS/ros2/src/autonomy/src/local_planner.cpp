@@ -1,6 +1,7 @@
 #include "autonomy/geometry.hpp"
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,9 +23,10 @@ public:
     min_track_width_ = declare_parameter<double>("min_track_width", 1.5);
     max_track_width_ = declare_parameter<double>("max_track_width", 6.0);
     max_longitudinal_offset_ = declare_parameter<double>("max_longitudinal_offset", 2.0);
+    half_track_width_ = declare_parameter<double>("half_track_width", 2.0);
     input_timeout_ = declare_parameter<double>("input_timeout", 0.5);
     if (min_track_width_ <= 0.0 || max_track_width_ <= min_track_width_ ||
-      max_longitudinal_offset_ <= 0.0 || input_timeout_ <= 0.0)
+      max_longitudinal_offset_ <= 0.0 || half_track_width_ <= 0.0 || input_timeout_ <= 0.0)
     {
       throw std::invalid_argument("invalid local planner parameters");
     }
@@ -71,12 +73,30 @@ private:
     path.header.frame_id = base_frame_;
     path.header.stamp = now();
     if (!fresh(left_time_) || !fresh(right_time_)) {
+      report_mode(PathMode::kNoPath, 0U);
       path_pub_->publish(path);
       return;
     }
 
-    const auto centerline = autonomy::smooth_path(autonomy::pair_cones(
-      left_, right_, min_track_width_, max_track_width_, max_longitudinal_offset_));
+    auto centerline = autonomy::pair_cones(
+      left_, right_, min_track_width_, max_track_width_, max_longitudinal_offset_);
+    PathMode mode = PathMode::kPaired;
+    if (centerline.size() < 2) {
+      if (left_.size() >= 2 && left_.size() >= right_.size()) {
+        centerline = autonomy::centerline_from_boundary(left_, true, half_track_width_);
+        mode = PathMode::kLeftBoundary;
+      } else if (right_.size() >= 2) {
+        centerline = autonomy::centerline_from_boundary(right_, false, half_track_width_);
+        mode = PathMode::kRightBoundary;
+      }
+    }
+    if (centerline.size() < 2) {
+      centerline.clear();
+      mode = PathMode::kNoPath;
+    } else {
+      centerline = autonomy::smooth_path(centerline);
+    }
+    report_mode(mode, centerline.size());
     for (const auto & point : centerline) {
       geometry_msgs::msg::PoseStamped pose;
       pose.header = path.header;
@@ -88,11 +108,43 @@ private:
     path_pub_->publish(path);
   }
 
+  enum class PathMode : std::uint8_t
+  {
+    kNoPath,
+    kPaired,
+    kLeftBoundary,
+    kRightBoundary
+  };
+
+  void report_mode(const PathMode mode, const std::size_t point_count)
+  {
+    if (mode == path_mode_) {
+      return;
+    }
+    path_mode_ = mode;
+    switch (mode) {
+      case PathMode::kPaired:
+        RCLCPP_INFO(get_logger(), "Path mode: paired boundaries (%zu points)", point_count);
+        break;
+      case PathMode::kLeftBoundary:
+        RCLCPP_WARN(get_logger(), "Path mode: left-boundary fallback (%zu points)", point_count);
+        break;
+      case PathMode::kRightBoundary:
+        RCLCPP_WARN(get_logger(), "Path mode: right-boundary fallback (%zu points)", point_count);
+        break;
+      case PathMode::kNoPath:
+        RCLCPP_WARN(get_logger(), "Path mode: no safe path");
+        break;
+    }
+  }
+
   std::string base_frame_;
   double min_track_width_;
   double max_track_width_;
   double max_longitudinal_offset_;
+  double half_track_width_;
   double input_timeout_;
+  PathMode path_mode_{PathMode::kNoPath};
   std::vector<autonomy::Point2> left_;
   std::vector<autonomy::Point2> right_;
   std::optional<rclcpp::Time> left_time_;

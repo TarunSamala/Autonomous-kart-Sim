@@ -1,0 +1,29 @@
+<launch>
+  <arg name="enabled" default="false"/>
+  <arg name="use_vio" default="false"/>
+  <arg name="map_file"/>
+  <arg name="route_file"/>
+  <arg name="localization_timeout_s" default="2.0"/>
+  <arg name="autonomy_config" default="$(find-pkg-share autonomy)/config/autonomy.yaml"/>
+  <arg name="slam_config"
+       default="$(find-pkg-share slam)/config/slam_toolbox_localization.yaml"/>
+
+  <include file="$(find-pkg-share slam)/launch/fsds_slam_localization.launch.xml">
+    <arg name="map_file" value="$(var map_file)"/>
+    <arg name="use_vio" value="$(var use_vio)"/>
+    <!-- Pass this explicitly: the parent also has an autonomy parameter file. -->
+    <arg name="config" value="$(var slam_config)"/>
+  </include>
+
+  <node pkg="autonomy" exec="route_planner" name="route_planner" output="screen">
+    <param name="route_file" value="$(var route_file)"/>
+    <!-- SLAM scan matching updates may arrive more slowly than odometry. -->
+    <param name="transform_timeout_s" value="$(var localization_timeout_s)"/>
+  </node>
+
+  <node pkg="autonomy" exec="pure_pursuit" name="pure_pursuit" output="screen">
+    <param from="$(var autonomy_config)"/>
+    <param name="enabled" value="$(var enabled)"/>
+    <param name="require_go" value="false"/>
+  </node>
+</launch>

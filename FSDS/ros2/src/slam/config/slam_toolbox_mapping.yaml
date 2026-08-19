@@ -1,0 +1,71 @@
+slam_toolbox:
+  ros__parameters:
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: HuberLoss
+
+    odom_frame: sensor/odom
+    map_frame: slam/map
+    base_frame: fsds/FSCar
+    scan_topic: /sensors/lidar/scan
+    mode: mapping
+    use_map_saver: true
+
+    debug_logging: false
+    throttle_scans: 1
+    # The FSDS LiDAR publishes at 10 Hz while RGB-D VIO updates at about 4 Hz.
+    # Keep enough scans for the next timestamped odom transform to arrive.
+    scan_queue_size: 30
+    transform_publish_period: 0.05
+    map_update_interval: 1.0
+    resolution: 0.05
+    # Keep this just below the LaserScan minimum. Equal values trigger a noisy
+    # SLAM Toolbox capability warning even though the scan is valid.
+    min_laser_range: 0.35
+    max_laser_range: 25.0
+    minimum_time_interval: 0.10
+    transform_timeout: 0.30
+    tf_buffer_duration: 30.0
+    stack_size_to_use: 40000000
+    enable_interactive_mode: true
+
+    # VIO provides the local motion prior; LiDAR scan matching refines it and
+    # SLAM Toolbox performs graph optimization and loop closure.
+    use_scan_matching: true
+    use_scan_barycenter: true
+    minimum_travel_distance: 0.40
+    minimum_travel_heading: 0.10
+    scan_buffer_size: 20
+    scan_buffer_maximum_scan_distance: 15.0
+    link_match_minimum_response_fine: 0.10
+    link_scan_maximum_distance: 2.0
+    loop_search_maximum_distance: 5.0
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 8
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.30
+    loop_match_minimum_response_fine: 0.40
+
+    # Karto's coarse matcher steps at 2x the correlation resolution. The
+    # dimension/resolution ratio must therefore be even; 0.75/0.01 created an
+    # even-sized probability grid and an out-of-range final coarse-search cell.
+    correlation_search_space_dimension: 0.80
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.10
+    loop_search_space_dimension: 10.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.03
+
+    distance_variance_penalty: 0.50
+    angle_variance_penalty: 1.00
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349
+    coarse_angle_resolution: 0.0349
+    minimum_angle_penalty: 0.90
+    minimum_distance_penalty: 0.50
+    use_response_expansion: true
+    min_pass_through: 1
+    occupancy_threshold: 0.10

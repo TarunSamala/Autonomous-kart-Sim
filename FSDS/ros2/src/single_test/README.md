@@ -1,9 +1,9 @@
 # Single Test
 
-This C++ package prepares and records one reproducible FSDS experiment. It does
-not launch autonomy or navigation. The initial operation mode is deliberately
-`manual`, allowing keyboard driving while sensor, mapping, localization, and
-loop-closure behavior are evaluated independently.
+This C++ package prepares and records one reproducible FSDS experiment. It
+supports `manual`, `mapping`, `localization`, and `autonomy` operations. Each
+result embeds the selected sensor profiles, algorithms, map/route artifacts,
+lap metrics, and cone-contact count.
 
 ## Contract
 
@@ -120,13 +120,34 @@ ros2 service call /single_test/stop std_srvs/srv/Trigger '{}'
 The result includes duration, integrated distance, average/max speed, lap
 times, down/out cone count, completion reason, and the exact manifest.
 
-## Next localization milestone
+## Run the saved-map autonomous benchmark
 
-After this preparation layer is validated, add a mapping session type around
-the existing RTAB-Map baseline:
+Prepare the immutable A3M1 + D455, SLAM Toolbox, recorded-route, Pure Pursuit
+contract without overwriting the active simulator settings:
 
-1. Build a map while manually driving and save its database.
-2. Verify loop closures and graph corrections against FSDS ground truth.
-3. Restart in localization-only mode using the saved map.
-4. Record translational/yaw error, relocalization time, loop-closure count, and
-   tracking-loss intervals in the Single Test result.
+```zsh
+ros2 run single_test prepare_single_test -- \
+  --config src/single_test/config/slam_toolbox_trackdrive.yaml \
+  --profiles src/single_test/config/sensor_profiles.yaml \
+  --base-settings ../settings.json \
+  --output-settings generated/single_test/slam_toolbox_trackdrive/settings.json \
+  --output-manifest generated/single_test/slam_toolbox_trackdrive/manifest.json
+```
+
+With FSDS and the bridge running, launch localization, route following, and the
+benchmark recorder in one terminal:
+
+```zsh
+scripts/single-test-autonomy
+```
+
+Wait for `route_planner` to report `TRACKING_ROUTE`, then arm both the recorder
+and controller from another terminal:
+
+```zsh
+scripts/single-test-arm
+```
+
+The controller starts disabled, brakes on stale/missing inputs, stops on the
+first new cone contact, ignores the short initial start-line event, and stops
+after one full lap. Results are written under `results/`.

@@ -216,9 +216,11 @@ private:
       tf2::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
       tf2::Vector3(translation.x, translation.y, translation.z));
 
+    const auto filtered_points = read_filtered_points(*message);
+    const auto clusters = cluster(filtered_points);
     std::vector<Point3> left;
     std::vector<Point3> right;
-    for (const auto & points : cluster(read_filtered_points(*message))) {
+    for (const auto & points : clusters) {
       Point3 centroid{};
       if (!centroid_if_cone(points, centroid)) {continue;}
       const tf2::Vector3 transformed = base_from_sensor *
@@ -226,6 +228,11 @@ private:
       Point3 base_point{transformed.x(), transformed.y(), transformed.z()};
       (base_point.y >= 0.0 ? left : right).push_back(base_point);
     }
+    RCLCPP_INFO_THROTTLE(
+      get_logger(), *get_clock(), 2000,
+      "LiDAR points=%u filtered=%zu clusters=%zu cones=%zu (left=%zu right=%zu)",
+      message->width * message->height, filtered_points.size(), clusters.size(),
+      left.size() + right.size(), left.size(), right.size());
     publish(left, right, message->header.stamp);
   }
 

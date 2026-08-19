@@ -1,17 +1,17 @@
 <launch>
   <arg name="enabled" default="false"/>
-  <arg name="require_go" default="false"/>
   <arg name="config" default="$(find-pkg-share autonomy)/config/autonomy.yaml"/>
 
-  <node pkg="autonomy" exec="cone_detector" name="cone_detector" output="screen">
+  <!-- Evaluation-only planner: proves closed-track control before replacing
+       testing odometry with a SLAM localization backend. -->
+  <node pkg="autonomy" exec="track_reference_planner"
+        name="track_reference_planner" output="screen">
     <param from="$(var config)"/>
   </node>
-  <node pkg="autonomy" exec="local_planner" name="local_planner" output="screen">
-    <param from="$(var config)"/>
-  </node>
+
   <node pkg="autonomy" exec="pure_pursuit" name="pure_pursuit" output="screen">
     <param from="$(var config)"/>
     <param name="enabled" value="$(var enabled)"/>
-    <param name="require_go" value="$(var require_go)"/>
+    <param name="require_go" value="false"/>
   </node>
 </launch>

@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cmath>
 #include <stdexcept>
+#include <vector>
 
 namespace single_test
 {
@@ -64,6 +65,15 @@ TestConfig parse_test_config(const YAML::Node & root)
   result.lidar_profile = optional<std::string>(sensors, "lidar", "off");
   result.depth_profile = optional<std::string>(sensors, "depth_camera", "off");
   result.chassis_imu = optional<bool>(sensors, "chassis_imu", true);
+  const auto algorithms = root["algorithms"];
+  result.odometry_algorithm = optional<std::string>(algorithms, "odometry", "none");
+  result.slam_algorithm = optional<std::string>(algorithms, "slam", "none");
+  result.planner_algorithm = optional<std::string>(algorithms, "planner", "none");
+  result.controller_algorithm = optional<std::string>(algorithms, "controller", "none");
+  result.filter_algorithm = optional<std::string>(algorithms, "filter", "none");
+  const auto artifacts = root["artifacts"];
+  result.map_file = optional<std::string>(artifacts, "map", "");
+  result.route_file = optional<std::string>(artifacts, "route", "");
 
   validate_test_config(result);
   return result;
@@ -81,12 +91,20 @@ void validate_test_config(const TestConfig & test)
     throw std::invalid_argument("test.track must not be empty");
   }
   positive(test.max_duration_s, "test.max_duration_s");
-  if (test.operation != "manual") {
+  const std::vector<std::string> operations{
+    "manual", "mapping", "localization", "autonomy"};
+  if (std::find(operations.begin(), operations.end(), test.operation) == operations.end()) {
     throw std::invalid_argument(
-            "only operation 'manual' is supported while autonomy/navigation are excluded");
+            "test.operation must be manual, mapping, localization, or autonomy");
   }
   if (test.lidar_profile == "off" && test.depth_profile == "off") {
     throw std::invalid_argument("at least one of lidar or depth_camera must be enabled");
+  }
+  if (test.operation == "autonomy" &&
+    (test.planner_algorithm == "none" || test.controller_algorithm == "none"))
+  {
+    throw std::invalid_argument(
+            "autonomy operation requires algorithms.planner and algorithms.controller");
   }
 }
 
