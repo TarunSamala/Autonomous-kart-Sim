@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -23,6 +24,8 @@ struct Arguments
   std::string base_settings;
   std::string output_settings;
   std::string output_manifest;
+  std::optional<std::string> lidar_profile;
+  std::optional<std::string> depth_profile;
   bool list_profiles{false};
 };
 
@@ -49,13 +52,18 @@ Arguments parse_arguments(const int argc, char ** argv)
       result.output_settings = next_value(index, argc, argv, option);
     } else if (option == "--output-manifest") {
       result.output_manifest = next_value(index, argc, argv, option);
+    } else if (option == "--lidar") {
+      result.lidar_profile = next_value(index, argc, argv, option);
+    } else if (option == "--depth-camera") {
+      result.depth_profile = next_value(index, argc, argv, option);
     } else if (option == "--list-profiles") {
       result.list_profiles = true;
     } else if (option == "--help" || option == "-h") {
       std::cout <<
         "prepare_single_test --config TEST.yaml --profiles sensor_profiles.yaml "
         "--base-settings settings.json --output-settings generated.json "
-        "--output-manifest manifest.json\n"
+        "--output-manifest manifest.json [--lidar PROFILE|off] "
+        "[--depth-camera PROFILE|off]\n"
         "prepare_single_test --profiles sensor_profiles.yaml --list-profiles\n";
       std::exit(0);
     } else {
@@ -125,7 +133,7 @@ json depth_manifest(
     {"rgb_horizontal_fov_deg", profile.rgb_horizontal_fov_deg},
     {"depth_horizontal_fov_deg", profile.depth_horizontal_fov_deg},
     {"depth_range_m", {profile.min_depth_m, profile.max_depth_m}},
-    {"baseline_mm", profile.baseline_mm},
+    {"baseline_mm", profile.baseline_mm ? json(*profile.baseline_mm) : json(nullptr)},
     {"integrated_imu", profile.integrated_imu},
     {"fidelity_note", profile.fidelity_note}
   };
@@ -196,7 +204,14 @@ int main(int argc, char ** argv)
       return 0;
     }
 
-    const auto test = single_test::load_test_config(arguments.config);
+    auto test = single_test::load_test_config(arguments.config);
+    if (arguments.lidar_profile) {
+      test.lidar_profile = *arguments.lidar_profile;
+    }
+    if (arguments.depth_profile) {
+      test.depth_profile = *arguments.depth_profile;
+    }
+    single_test::validate_test_config(test);
     const auto resolved = single_test::resolve_test(test, catalog);
     auto settings = read_json(arguments.base_settings);
     auto & vehicle = settings.at("Vehicles").at("FSCar");

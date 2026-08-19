@@ -11,12 +11,22 @@ workspace_root="${script_path:h:h}"
 source /opt/ros/humble/setup.zsh
 source "$workspace_root/install/setup.zsh"
 
-test_config="${1:-$workspace_root/src/single_test/config/example_single_test.yaml}"
-output_root="${2:-$workspace_root/generated/single_test}"
+test_config="$workspace_root/src/single_test/config/example_single_test.yaml"
+output_root="$workspace_root/generated/single_test"
+
+if (( $# > 0 )) && [[ "$1" != --* ]]; then
+  test_config="$1"
+  shift
+fi
+if (( $# > 0 )) && [[ "$1" != --* ]]; then
+  output_root="$1"
+  shift
+fi
 
 exec ros2 run single_test prepare_single_test -- \
   --config "$test_config" \
   --profiles "$workspace_root/src/single_test/config/sensor_profiles.yaml" \
   --base-settings "$workspace_root/../settings.json" \
   --output-settings "$output_root/settings.json" \
-  --output-manifest "$output_root/manifest.json"
+  --output-manifest "$output_root/manifest.json" \
+  "$@"

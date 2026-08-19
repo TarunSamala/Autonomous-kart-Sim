@@ -1,17 +1,14 @@
 #include "SimHUD.h"
+#include "BenchmarkMenuWidget.h"
+#include "BenchmarkMenuHost.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
+#include "GameFramework/PlayerController.h"
 #include "HAL/PlatformMisc.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
-#include "Widgets/Layout/SBorder.h"
-#include "Widgets/Layout/SBox.h"
-#include "Widgets/SBoxPanel.h"
-#include "Widgets/SOverlay.h"
-#include "Widgets/Text/STextBlock.h"
-#include "Widgets/Input/SButton.h"
 
 #include "Vehicles/Car/SimModeCar.h"
 
@@ -31,7 +28,9 @@ void ASimHUD::BeginPlay()
     try
     {
         createMainWidget();
-        createBridgeControlWidget();
+        GetWorldTimerManager().SetTimerForNextTick(
+            this,
+            &ASimHUD::createBridgeControlWidget);
         setupInputBindings();
     }
     catch (std::exception &ex)
@@ -45,12 +44,26 @@ void ASimHUD::BeginPlay()
 void ASimHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     GetWorldTimerManager().ClearTimer(bridge_process_timer_);
+    GetWorldTimerManager().ClearTimer(preparation_process_timer_);
     removeBridgeControlWidget();
+
+    if (screen_message_suppression_active_ && GEngine)
+    {
+        GEngine->Exec(GetWorld(), TEXT("ENABLEALLSCREENMESSAGES"));
+        GEngine->bEnableOnScreenDebugMessages = screen_messages_were_enabled_;
+        screen_message_suppression_active_ = false;
+    }
 
     if (bridge_process_.IsValid())
     {
         FPlatformProcess::CloseProc(bridge_process_);
         bridge_process_.Reset();
+    }
+
+    if (preparation_process_.IsValid())
+    {
+        FPlatformProcess::CloseProc(preparation_process_);
+        preparation_process_.Reset();
     }
 
     if (widget_)
@@ -92,8 +105,14 @@ void ASimHUD::createMainWidget()
 
 void ASimHUD::createBridgeControlWidget()
 {
+    if (benchmark_menu_host_)
+    {
+        return;
+    }
+
     if (!GEngine || !GEngine->GameViewport)
     {
+        UE_LOG(LogTemp, Error, TEXT("Benchmark menu: game viewport is unavailable"));
         UAirBlueprintLib::LogMessage(
             TEXT("Cannot create ROS bridge controls: game viewport is unavailable"),
             TEXT(""),
@@ -101,72 +120,48 @@ void ASimHUD::createBridgeControlWidget()
         return;
     }
 
-    TSharedPtr<SOverlay> root_overlay;
-    SAssignNew(root_overlay, SOverlay)
-        + SOverlay::Slot()
-        .HAlign(HAlign_Right)
-        .VAlign(VAlign_Top)
-        .Padding(FMargin(24.0f))
-        [
-            SNew(SBox)
-            .WidthOverride(280.0f)
-            [
-                SNew(SBorder)
-                .BorderBackgroundColor(FLinearColor(0.015f, 0.02f, 0.03f, 0.92f))
-                .Padding(FMargin(16.0f, 12.0f))
-                [
-                    SNew(SVerticalBox)
-                    + SVerticalBox::Slot()
-                    .AutoHeight()
-                    .Padding(0.0f, 0.0f, 0.0f, 3.0f)
-                    [
-                        SNew(STextBlock)
-                        .Text(FText::FromString(TEXT("ROS 2 BRIDGE")))
-                        .ColorAndOpacity(FLinearColor(0.85f, 0.9f, 1.0f))
-                    ]
-                    + SVerticalBox::Slot()
-                    .AutoHeight()
-                    .Padding(0.0f, 0.0f, 0.0f, 10.0f)
-                    [
-                        SAssignNew(bridge_status_text_, STextBlock)
-                        .Text(FText::FromString(TEXT("READY")))
-                        .ColorAndOpacity(FLinearColor(0.95f, 0.65f, 0.1f))
-                    ]
-                    + SVerticalBox::Slot()
-                    .AutoHeight()
-                    [
-                        SNew(SButton)
-                        .HAlign(HAlign_Center)
-                        .VAlign(VAlign_Center)
-                        .ContentPadding(FMargin(14.0f, 8.0f))
-                        .OnClicked(FOnClicked::CreateUObject(
-                            this,
-                            &ASimHUD::connectRosBridge))
-                        [
-                            SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("CONNECT ROS BRIDGE")))
-                        ]
-                    ]
-                ]
-            ]
-        ];
+    APlayerController* player_controller = GetWorld()->GetFirstPlayerController();
+    if (!player_controller)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Benchmark menu: player controller is unavailable"));
+        return;
+    }
 
-    bridge_control_widget_ = root_overlay;
-    GEngine->GameViewport->AddViewportWidgetContent(
-        bridge_control_widget_.ToSharedRef(),
-        100);
+    benchmark_menu_host_ = CreateWidget<UBenchmarkMenuHost>(
+        player_controller,
+        UBenchmarkMenuHost::StaticClass());
+    if (!benchmark_menu_host_)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Benchmark menu: failed to create native UMG host"));
+        return;
+    }
+
+    benchmark_menu_host_->Configure(
+        FSimpleDelegate::CreateLambda([this]() {
+            connectRosBridge();
+        }),
+        FOnPrepareBenchmark::CreateUObject(
+            this,
+            &ASimHUD::prepareSingleTest),
+        FSimpleDelegate::CreateUObject(
+            this,
+            &ASimHUD::inputEventToggleBenchmarkMenu));
+
+    benchmark_menu_host_->AddToViewport(1000);
+    benchmark_menu_ = benchmark_menu_host_->GetBenchmarkMenu();
+    UE_LOG(LogTemp, Display, TEXT("Benchmark menu: added native UMG host to viewport"));
+    setBenchmarkMenuVisible(true);
 }
 
 void ASimHUD::removeBridgeControlWidget()
 {
-    if (bridge_control_widget_.IsValid() && GEngine && GEngine->GameViewport)
+    if (benchmark_menu_host_)
     {
-        GEngine->GameViewport->RemoveViewportWidgetContent(
-            bridge_control_widget_.ToSharedRef());
+        benchmark_menu_host_->RemoveFromParent();
+        benchmark_menu_host_ = nullptr;
     }
 
-    bridge_status_text_.Reset();
-    bridge_control_widget_.Reset();
+    benchmark_menu_.Reset();
 }
 
 FReply ASimHUD::connectRosBridge()
@@ -235,6 +230,8 @@ FString ASimHUD::findBridgeStartScript() const
     const TArray<FString> candidates = {
         configured_path,
         FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::ProjectDir(), TEXT("../ros2/scripts/single-test-bridge"))),
+        FPaths::ConvertRelativePathToFull(
             FPaths::Combine(FPaths::ProjectDir(), TEXT("../ros2/scripts/bridge-start"))),
         FPaths::ConvertRelativePathToFull(
             FPaths::Combine(FPaths::LaunchDir(), TEXT("ros2/scripts/bridge-start"))),
@@ -286,18 +283,217 @@ void ASimHUD::updateBridgeProcessState()
 
 void ASimHUD::setBridgeStatus(const FText& status, const FLinearColor& color)
 {
-    if (bridge_status_text_.IsValid())
+    if (benchmark_menu_.IsValid())
     {
-        bridge_status_text_->SetText(status);
-        bridge_status_text_->SetColorAndOpacity(color);
+        benchmark_menu_->SetBridgeStatus(status, color);
     }
+}
+
+void ASimHUD::prepareSingleTest(
+    const FString& lidar_profile,
+    const FString& depth_profile)
+{
+    if (preparation_process_.IsValid()
+        && FPlatformProcess::IsProcRunning(preparation_process_))
+    {
+        if (benchmark_menu_.IsValid())
+        {
+            benchmark_menu_->SetPreparationStatus(
+                FText::FromString(TEXT("PROFILE GENERATION ALREADY RUNNING")),
+                FLinearColor(1.0f, 0.68f, 0.18f));
+        }
+        return;
+    }
+
+    const FString script_path = findSingleTestPrepareScript();
+    if (script_path.IsEmpty())
+    {
+        if (benchmark_menu_.IsValid())
+        {
+            benchmark_menu_->SetPreparationStatus(
+                FText::FromString(TEXT("SINGLE TEST PREPARE SCRIPT NOT FOUND")),
+                FLinearColor(1.0f, 0.28f, 0.28f));
+        }
+        return;
+    }
+
+    const FString arguments = FString::Printf(
+        TEXT("--lidar %s --depth-camera %s"),
+        *lidar_profile,
+        *depth_profile);
+
+    uint32 process_id = 0;
+    preparation_process_ = FPlatformProcess::CreateProc(
+        *script_path,
+        *arguments,
+        false,
+        false,
+        false,
+        &process_id,
+        0,
+        nullptr,
+        nullptr);
+
+    if (!preparation_process_.IsValid())
+    {
+        if (benchmark_menu_.IsValid())
+        {
+            benchmark_menu_->SetPreparationStatus(
+                FText::FromString(TEXT("FAILED TO START PROFILE GENERATOR")),
+                FLinearColor(1.0f, 0.28f, 0.28f));
+        }
+        return;
+    }
+
+    preparation_process_was_running_ = true;
+    GetWorldTimerManager().SetTimer(
+        preparation_process_timer_,
+        this,
+        &ASimHUD::updatePreparationProcessState,
+        0.35f,
+        true);
+    updatePreparationProcessState();
+}
+
+FString ASimHUD::findSingleTestPrepareScript() const
+{
+    const FString configured_path = FPlatformMisc::GetEnvironmentVariable(
+        TEXT("FSDS_SINGLE_TEST_PREPARE_SCRIPT"));
+
+    const TArray<FString> candidates = {
+        configured_path,
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::ProjectDir(), TEXT("../ros2/scripts/single-test-prepare"))),
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::LaunchDir(), TEXT("ros2/scripts/single-test-prepare"))),
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::LaunchDir(), TEXT("../ros2/scripts/single-test-prepare")))
+    };
+
+    for (const FString& candidate : candidates)
+    {
+        if (!candidate.IsEmpty() && FPaths::FileExists(candidate))
+        {
+            return candidate;
+        }
+    }
+
+    return FString();
+}
+
+void ASimHUD::updatePreparationProcessState()
+{
+    const bool is_running = preparation_process_.IsValid()
+        && FPlatformProcess::IsProcRunning(preparation_process_);
+
+    if (is_running)
+    {
+        preparation_process_was_running_ = true;
+        if (benchmark_menu_.IsValid())
+        {
+            benchmark_menu_->SetPreparationStatus(
+                FText::FromString(TEXT("GENERATING SETTINGS AND MANIFEST...")),
+                FLinearColor(1.0f, 0.68f, 0.18f));
+        }
+        return;
+    }
+
+    if (preparation_process_was_running_)
+    {
+        int32 return_code = -1;
+        const bool has_return_code = preparation_process_.IsValid()
+            && FPlatformProcess::GetProcReturnCode(preparation_process_, &return_code);
+        const bool succeeded = has_return_code && return_code == 0;
+
+        if (benchmark_menu_.IsValid())
+        {
+            benchmark_menu_->SetPreparationStatus(
+                succeeded
+                    ? FText::FromString(TEXT("PROFILE READY / RESTART FSDS TO APPLY"))
+                    : FText::FromString(TEXT("PROFILE GENERATION FAILED / CHECK LOG")),
+                succeeded
+                    ? FLinearColor(0.22f, 0.91f, 0.55f)
+                    : FLinearColor(1.0f, 0.28f, 0.28f));
+        }
+        preparation_process_was_running_ = false;
+    }
+
+    GetWorldTimerManager().ClearTimer(preparation_process_timer_);
+}
+
+void ASimHUD::setBenchmarkMenuVisible(bool visible)
+{
+    benchmark_menu_visible_ = visible;
+
+    // AirSim continuously emits vehicle telemetry through Unreal's on-screen
+    // debug channel. Suppress it while the full-screen menu is open so those
+    // messages cannot draw over the navigation, then restore the user's prior
+    // engine setting when returning to the simulation.
+    if (GEngine)
+    {
+        if (visible && !screen_message_suppression_active_)
+        {
+            screen_messages_were_enabled_ = GEngine->bEnableOnScreenDebugMessages;
+            GEngine->bEnableOnScreenDebugMessages = false;
+            GEngine->ClearOnScreenDebugMessages();
+            GEngine->Exec(GetWorld(), TEXT("DISABLEALLSCREENMESSAGES"));
+            screen_message_suppression_active_ = true;
+        }
+        else if (!visible && screen_message_suppression_active_)
+        {
+            GEngine->Exec(GetWorld(), TEXT("ENABLEALLSCREENMESSAGES"));
+            GEngine->bEnableOnScreenDebugMessages = screen_messages_were_enabled_;
+            screen_message_suppression_active_ = false;
+        }
+    }
+
+    if (benchmark_menu_host_)
+    {
+        benchmark_menu_host_->SetVisibility(
+            visible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    }
+
+    APlayerController* player_controller = GetWorld()
+        ? GetWorld()->GetFirstPlayerController()
+        : nullptr;
+    if (!player_controller)
+    {
+        return;
+    }
+
+    player_controller->bShowMouseCursor = visible;
+    if (visible)
+    {
+        FInputModeGameAndUI input_mode;
+        if (benchmark_menu_.IsValid())
+        {
+            input_mode.SetWidgetToFocus(benchmark_menu_);
+        }
+        input_mode.SetHideCursorDuringCapture(false);
+        player_controller->SetInputMode(input_mode);
+    }
+    else
+    {
+        player_controller->SetInputMode(FInputModeGameOnly());
+    }
+}
+
+void ASimHUD::inputEventToggleBenchmarkMenu()
+{
+    setBenchmarkMenuVisible(!benchmark_menu_visible_);
 }
 
 
 
 void ASimHUD::setupInputBindings()
 {
-    UAirBlueprintLib::EnableInput(this);
-
+    // BindActionToKey registers directly on the local player controller. AHUD
+    // is not a pawn, so calling AActor::EnableInput() here only emits an engine
+    // error and is neither required nor valid.
     UAirBlueprintLib::BindActionToKey("InputEventToggleHelp", EKeys::F1, this, &ASimHUD::inputEventToggleHelp);
+    UAirBlueprintLib::BindActionToKey(
+        "InputEventToggleBenchmarkMenu",
+        EKeys::F2,
+        this,
+        &ASimHUD::inputEventToggleBenchmarkMenu);
 }

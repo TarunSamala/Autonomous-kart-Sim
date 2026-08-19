@@ -51,7 +51,7 @@ struct DepthProfile
   double depth_horizontal_fov_deg{};
   double min_depth_m{};
   double max_depth_m{};
-  double baseline_mm{};
+  std::optional<double> baseline_mm;
   bool integrated_imu{};
   std::string fidelity_note;
 };
@@ -71,6 +71,7 @@ struct ResolvedTest
 };
 
 TestConfig parse_test_config(const YAML::Node & root);
+void validate_test_config(const TestConfig & test);
 ProfileCatalog parse_profile_catalog(const YAML::Node & root);
 TestConfig load_test_config(const std::string & path);
 ProfileCatalog load_profile_catalog(const std::string & path);

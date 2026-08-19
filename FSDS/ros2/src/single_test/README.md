@@ -30,9 +30,33 @@ ros2 run single_test prepare_single_test -- \
   --output-manifest generated/single_test/manifest.json
 ```
 
+For routine tests, select profiles directly from the command line:
+
+```zsh
+# LiDAR only
+scripts/single-test-prepare --lidar a1m8 --depth-camera off
+
+# Depth camera only
+scripts/single-test-prepare --lidar off --depth-camera d455
+
+# Combined sensors
+scripts/single-test-prepare --lidar a3m1 --depth-camera d435
+```
+
+Valid LiDAR profiles are `a1m8`, `a3m1`, and `fsds_16`. Valid depth profiles
+are `hp60c`, `d415`, `d435`, and `d455`. A custom test YAML and output
+directory can still be passed as the first two positional arguments.
+
 Never overwrite the repository's base `FSDS/settings.json` for an experiment.
-Launch FSDS with the generated file through its `-settings` argument. Start the
-bridge with the same generated file:
+Restart FSDS with the generated file through its `-settings` argument; sensor
+changes are read only when the simulator starts:
+
+```zsh
+<path-to-release>/FSDS.sh \
+  -settings "$PWD/generated/single_test/settings.json"
+```
+
+Then start the bridge with the same generated file:
 
 ```zsh
 scripts/single-test-bridge
@@ -40,6 +64,46 @@ scripts/single-test-bridge
 
 The bridge reads `FSDS_SETTINGS_PATH`, creates only the selected camera topics,
 and derives its LiDAR polling period from the enabled profile's scan frequency.
+
+## Visualize sensors
+
+After FSDS and `scripts/single-test-bridge` are running:
+
+```zsh
+scripts/single-test-visualize
+```
+
+This opens RViz2 with Best Effort sensor QoS and displays the LiDAR cloud,
+front RGB image, metric depth image, and a depth-derived point cloud. The
+point-cloud converter uses depth calibration instead of assuming RGB/depth
+registration, so it works for D415 and D435 profiles with different fields of
+view. Disable parts of the launch when needed:
+
+```zsh
+scripts/single-test-visualize point_cloud:=false
+scripts/single-test-visualize rviz:=false
+```
+
+If a selected sensor is `off`, its preconfigured RViz display simply reports
+that no topic is available; it does not affect the enabled sensor.
+
+Expected topics by selection:
+
+| Selection | Topics |
+|---|---|
+| LiDAR on | `/fsds/lidar/Lidar1` |
+| Depth camera on | `/fsds/front_rgb/image_color`, `/fsds/front_depth/image_depth`, both `camera_info` topics |
+| Visualization point cloud | `/fsds/front_depth/points` |
+| Chassis IMU on | `/fsds/imu` |
+
+Useful terminal checks are:
+
+```zsh
+ros2 topic list | sort
+ros2 topic hz /fsds/lidar/Lidar1
+ros2 topic hz /fsds/front_depth/image_depth
+ros2 topic info --verbose /fsds/front_depth/points
+```
 
 ## Record a manual test
 

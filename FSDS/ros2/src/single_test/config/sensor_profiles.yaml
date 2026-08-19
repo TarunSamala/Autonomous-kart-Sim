@@ -50,6 +50,22 @@ lidar:
     fidelity_note: Native development profile; not a named physical product.
 
 depth_camera:
+  hp60c:
+    label: YDLIDAR HP60C
+    manufacturer: YDLIDAR
+    model: HP60C
+    source_url: https://www.ydlidar.com/product/ydlidar-hp60c
+    width: 640
+    height: 480
+    frames_per_second: 20.0
+    rgb_horizontal_fov_deg: 80.9
+    depth_horizontal_fov_deg: 73.8
+    min_depth_m: 0.2
+    max_depth_m: 4.0
+    baseline_mm: null
+    integrated_imu: false
+    fidelity_note: Uses the recommended 640x480 RGB and 640x480 RAW16 depth contract. HP60C is a structured-light RGB-D camera, not a scanning LiDAR; FSDS does not reproduce its 940nm projector, fill rate, depth noise, indoor-light limitations, USB 2.0 transport, or sub-2mm-at-1m plane-accuracy claim.
+
   d415:
     label: Intel RealSense D415
     manufacturer: Intel RealSense

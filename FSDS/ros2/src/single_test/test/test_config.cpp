@@ -22,6 +22,19 @@ lidar:
     vertical_fov_lower_deg: 0
     vertical_fov_upper_deg: 0
 depth_camera:
+  hp60c:
+    label: HP60C
+    manufacturer: YDLIDAR
+    model: HP60C
+    width: 640
+    height: 480
+    frames_per_second: 20
+    rgb_horizontal_fov_deg: 80.9
+    depth_horizontal_fov_deg: 73.8
+    min_depth_m: 0.2
+    max_depth_m: 4
+    baseline_mm: null
+    integrated_imu: false
   d455:
     label: D455
     manufacturer: Intel RealSense
@@ -58,6 +71,20 @@ TEST(SingleTestConfig, RejectsAutonomousOperation)
 test: {id: invalid, track: TrainingMap, operation: autonomous}
 sensors: {lidar: a3m1, depth_camera: off}
 )")), std::invalid_argument);
+}
+
+TEST(SingleTestConfig, ResolvesStructuredLightCameraWithoutStereoBaseline)
+{
+  const auto test = single_test::parse_test_config(YAML::Load(R"(
+test: {id: hp60c_test, track: TrainingMap}
+sensors: {lidar: off, depth_camera: hp60c}
+)"));
+  const auto resolved = single_test::resolve_test(
+    test, single_test::parse_profile_catalog(YAML::Load(profiles)));
+  ASSERT_TRUE(resolved.depth.has_value());
+  EXPECT_EQ(resolved.depth->width, 640);
+  EXPECT_DOUBLE_EQ(resolved.depth->frames_per_second, 20.0);
+  EXPECT_FALSE(resolved.depth->baseline_mm.has_value());
 }
 
 TEST(SingleTestConfig, RejectsUnknownProfile)

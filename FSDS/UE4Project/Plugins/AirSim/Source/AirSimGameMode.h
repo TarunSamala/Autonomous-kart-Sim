@@ -37,6 +37,7 @@ private:
     bool parseSettingsStringFromCommandLine(FString maybeQuotedString, FString& settingsTextOutput);
 
     void setUnrealEngineSettings();
+    void ensureLocalBenchmarkHud();
 
 
 };

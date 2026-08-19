@@ -65,21 +65,29 @@ TestConfig parse_test_config(const YAML::Node & root)
   result.depth_profile = optional<std::string>(sensors, "depth_camera", "off");
   result.chassis_imu = optional<bool>(sensors, "chassis_imu", true);
 
-  if (!valid_id(result.id)) {
+  validate_test_config(result);
+  return result;
+}
+
+void validate_test_config(const TestConfig & test)
+{
+  if (test.schema_version != 1) {
+    throw std::invalid_argument("unsupported test schema_version");
+  }
+  if (!valid_id(test.id)) {
     throw std::invalid_argument("test.id may contain only letters, digits, '-' and '_'");
   }
-  if (result.track.empty()) {
+  if (test.track.empty()) {
     throw std::invalid_argument("test.track must not be empty");
   }
-  positive(result.max_duration_s, "test.max_duration_s");
-  if (result.operation != "manual") {
+  positive(test.max_duration_s, "test.max_duration_s");
+  if (test.operation != "manual") {
     throw std::invalid_argument(
             "only operation 'manual' is supported while autonomy/navigation are excluded");
   }
-  if (result.lidar_profile == "off" && result.depth_profile == "off") {
+  if (test.lidar_profile == "off" && test.depth_profile == "off") {
     throw std::invalid_argument("at least one of lidar or depth_camera must be enabled");
   }
-  return result;
 }
 
 ProfileCatalog parse_profile_catalog(const YAML::Node & root)
@@ -139,7 +147,9 @@ ProfileCatalog parse_profile_catalog(const YAML::Node & root)
       node, "depth_horizontal_fov_deg", "depth_camera." + id);
     profile.min_depth_m = required<double>(node, "min_depth_m", "depth_camera." + id);
     profile.max_depth_m = required<double>(node, "max_depth_m", "depth_camera." + id);
-    profile.baseline_mm = required<double>(node, "baseline_mm", "depth_camera." + id);
+    if (node["baseline_mm"] && !node["baseline_mm"].IsNull()) {
+      profile.baseline_mm = node["baseline_mm"].as<double>();
+    }
     profile.integrated_imu = required<bool>(node, "integrated_imu", "depth_camera." + id);
     profile.fidelity_note = optional<std::string>(node, "fidelity_note", "");
     if (profile.width <= 0 || profile.height <= 0) {
@@ -148,6 +158,9 @@ ProfileCatalog parse_profile_catalog(const YAML::Node & root)
     positive(profile.frames_per_second, "depth_camera." + id + ".frames_per_second");
     positive(profile.min_depth_m, "depth_camera." + id + ".min_depth_m");
     positive(profile.max_depth_m, "depth_camera." + id + ".max_depth_m");
+    if (profile.baseline_mm) {
+      positive(*profile.baseline_mm, "depth_camera." + id + ".baseline_mm");
+    }
     if (profile.max_depth_m <= profile.min_depth_m) {
       throw std::invalid_argument("depth profile max_depth_m must exceed min_depth_m: " + id);
     }

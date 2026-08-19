@@ -75,6 +75,13 @@ void AAirSimGameMode::BeginPlay()
     }
 
     Super::BeginPlay();
+
+    // Standalone FSDS switches the controller to spectator-only mode. On Linux
+    // that path may skip the normal HUD spawn, so explicitly establish the
+    // native benchmark HUD after the world and local controller are ready.
+    GetWorldTimerManager().SetTimerForNextTick(
+        this,
+        &AAirSimGameMode::ensureLocalBenchmarkHud);
 }
 
 void AAirSimGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -96,6 +103,34 @@ void AAirSimGameMode::PreLogin(const FString& Options, const FString& Address, c
 
 void AAirSimGameMode::PostLogin(APlayerController * newPlayer) {
     newPlayer->StartSpectatingOnly();
+}
+
+void AAirSimGameMode::ensureLocalBenchmarkHud()
+{
+    APlayerController* player_controller = GetWorld()
+        ? GetWorld()->GetFirstPlayerController()
+        : nullptr;
+    if (!player_controller)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Benchmark menu: local player controller is unavailable"));
+        return;
+    }
+
+    ASimHUD* sim_hud = Cast<ASimHUD>(player_controller->GetHUD());
+    if (!sim_hud)
+    {
+        player_controller->ClientSetHUD(ASimHUD::StaticClass());
+        sim_hud = Cast<ASimHUD>(player_controller->GetHUD());
+    }
+
+    if (sim_hud)
+    {
+        UE_LOG(LogTemp, Display, TEXT("Benchmark menu: spectator HUD ready"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Benchmark menu: spectator HUD failed to initialize"));
+    }
 }
 
 void AAirSimGameMode::initializeSettings()
