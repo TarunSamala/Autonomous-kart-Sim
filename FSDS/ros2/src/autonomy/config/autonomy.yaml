@@ -17,23 +17,50 @@ local_planner:
     min_track_width: 1.5
     max_track_width: 6.0
     max_longitudinal_offset: 2.0
+    # Used only when one boundary temporarily has too few visible cones.
+    half_track_width: 2.0
     input_timeout: 0.5
+
+track_reference_planner:
+  ros__parameters:
+    track_topic: /fsds/testing_only/track
+    pose_topic: /fsds/testing_only/odom
+    base_frame: fsds/FSCar
+    global_frame: fsds/map
+    path_spacing: 0.40
+    path_horizon: 24.0
+    max_path_deviation: 3.0
+    # Averaging a closed polyline pulls tight bends toward the inside cones.
+    # Keep the paired boundary midpoint polyline unsmoothed for clearance.
+    smoothing_passes: 0
 
 pure_pursuit:
   ros__parameters:
     enabled: false
     require_go: true
-    lookahead_distance: 2.5
+    lookahead_distance: 1.5
     wheelbase: 1.55
     max_steering_angle: 0.436332
-    straight_throttle: 0.20
-    corner_throttle: 0.11
-    target_speed: 1.50
-    max_speed: 2.00
-    overspeed_brake: 0.50
-    launch_throttle: 0.45
-    launch_release_speed: 0.50
-    launch_timeout: 0.80
+    target_speed: 1.00
+    corner_speed: 0.70
+    max_speed: 1.40
+    full_corner_curvature: 0.35
+    speed_kp: 0.20
+    speed_ki: 0.03
+    speed_integral_limit: 1.0
+    max_tracking_throttle: 0.16
+    max_tracking_brake: 0.70
+    overspeed_brake: 1.00
+    launch_throttle: 0.55
+    launch_release_speed: 0.10
+    launch_pulse_duration: 0.10
+    launch_timeout: 0.75
     path_timeout: 0.5
     speed_timeout: 0.5
     go_timeout: 4.0
+    stop_on_cone_contact: true
+    stop_after_laps: 1
+    # FSDS reports the initial departure through its start-line trigger as a
+    # lap. Ignore that event; TrainingMap is far longer than this threshold.
+    minimum_lap_distance_m: 100.0
+    extra_info_timeout: 2.0

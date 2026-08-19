@@ -15,8 +15,10 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>yaml-cpp</depend>
+  <exec_depend>autonomy</exec_depend>
   <exec_depend>depth_image_proc</exec_depend>
   <exec_depend>rviz2</exec_depend>
+  <exec_depend>slam</exec_depend>
   <test_depend>ament_cmake_gtest</test_depend>
 
   <export>

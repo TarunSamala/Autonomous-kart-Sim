@@ -65,10 +65,22 @@ sensors: {lidar: a3m1, depth_camera: d455, chassis_imu: true}
   EXPECT_EQ(resolved.depth->width, 848);
 }
 
-TEST(SingleTestConfig, RejectsAutonomousOperation)
+TEST(SingleTestConfig, AcceptsAutonomyOperationWithAlgorithms)
+{
+  const auto test = single_test::parse_test_config(YAML::Load(R"(
+test: {id: autonomy, track: TrainingMap, operation: autonomy}
+sensors: {lidar: a3m1, depth_camera: off}
+algorithms: {odometry: sensor_odometry, slam: slam_toolbox, planner: recorded_route, controller: pure_pursuit}
+)"));
+  EXPECT_EQ(test.operation, "autonomy");
+  EXPECT_EQ(test.slam_algorithm, "slam_toolbox");
+  EXPECT_EQ(test.controller_algorithm, "pure_pursuit");
+}
+
+TEST(SingleTestConfig, RejectsUnknownOperation)
 {
   EXPECT_THROW(single_test::parse_test_config(YAML::Load(R"(
-test: {id: invalid, track: TrainingMap, operation: autonomous}
+test: {id: invalid, track: TrainingMap, operation: unknown}
 sensors: {lidar: a3m1, depth_camera: off}
 )")), std::invalid_argument);
 }

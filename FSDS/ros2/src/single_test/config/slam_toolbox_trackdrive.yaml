@@ -1,0 +1,23 @@
+schema_version: 1
+
+test:
+  id: a3m1_d455_slam_toolbox_trackdrive
+  track: TrainingMap
+  max_duration_s: 900.0
+  operation: autonomy
+
+sensors:
+  lidar: a3m1
+  depth_camera: d455
+  chassis_imu: true
+
+algorithms:
+  odometry: sensor_odometry
+  slam: slam_toolbox_localization
+  planner: recorded_route
+  controller: pure_pursuit
+  filter: none
+
+artifacts:
+  map: generated/maps/TrainingMap/track_sensor
+  route: generated/maps/TrainingMap/route_sensor_slam.json

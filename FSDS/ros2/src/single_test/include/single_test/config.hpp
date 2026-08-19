@@ -19,6 +19,13 @@ struct TestConfig
   std::string lidar_profile{"off"};
   std::string depth_profile{"off"};
   bool chassis_imu{true};
+  std::string odometry_algorithm{"none"};
+  std::string slam_algorithm{"none"};
+  std::string planner_algorithm{"none"};
+  std::string controller_algorithm{"none"};
+  std::string filter_algorithm{"none"};
+  std::string map_file;
+  std::string route_file;
 };
 
 struct LidarProfile

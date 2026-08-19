@@ -233,7 +233,17 @@ int main(int argc, char ** argv)
           {"depth_camera", resolved.depth ?
             depth_manifest(test.depth_profile, *resolved.depth) : json(nullptr)},
           {"chassis_imu", test.chassis_imu}}},
-      {"excluded", {"autonomy", "navigation"}},
+      {"algorithms", {
+          {"odometry", test.odometry_algorithm},
+          {"slam", test.slam_algorithm},
+          {"planner", test.planner_algorithm},
+          {"controller", test.controller_algorithm},
+          {"filter", test.filter_algorithm}}},
+      {"artifacts", {
+          {"map", test.map_file.empty() ? json(nullptr) : json(test.map_file)},
+          {"route", test.route_file.empty() ? json(nullptr) : json(test.route_file)}}},
+      {"excluded", test.operation == "manual" ?
+        json::array({"autonomy", "navigation"}) : json::array({"navigation"})},
       {"source", {
           {"test_config", fs::absolute(arguments.config).string()},
           {"profile_catalog", fs::absolute(arguments.profiles).string()},

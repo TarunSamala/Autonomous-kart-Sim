@@ -1,0 +1,33 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+map_file="${1:-$workspace_root/generated/maps/TrainingMap/track_sensor}"
+route_file="${2:-$workspace_root/generated/maps/TrainingMap/route_sensor_slam.json}"
+manifest="${3:-$workspace_root/generated/single_test/slam_toolbox_trackdrive/manifest.json}"
+results_directory="${4:-$workspace_root/results}"
+
+for required_file in "$map_file.posegraph" "$map_file.data" "$route_file" "$manifest"; do
+  if [[ ! -f "$required_file" ]]; then
+    print -u2 "single-test-autonomy: required file not found: $required_file"
+    exit 1
+  fi
+done
+
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
+source /opt/ros/humble/setup.zsh
+source "$workspace_root/install/setup.zsh"
+
+exec ros2 launch single_test slam_toolbox_trackdrive.launch.xml \
+  map_file:="$map_file" \
+  route_file:="$route_file" \
+  manifest:="$manifest" \
+  results_directory:="$results_directory" \
+  enabled:=false \
+  use_vio:=false

@@ -7,7 +7,7 @@ intentionally omit a project prefix so that the software graph stays concise.
 
 | Package | State | Responsibility |
 | --- | --- | --- |
-| `single_test` | Implemented baseline | Sensor profile preparation, lifecycle and result recording |
+| `single_test` | Implemented | Sensor profiles, autonomous benchmark lifecycle, immutable manifests and results |
 | `interfaces` | Planned | Shared messages and services |
 | `sensor_interface` | Implemented | Simulator/RealSense and vehicle sensor adapters |
 | `teleop` | Implemented | Manual keyboard control |
@@ -16,7 +16,8 @@ intentionally omit a project prefix so that the software graph stays concise.
 | `state_estimator` | Planned | VIO, wheel odometry and chassis IMU fusion |
 | `perception` | Planned | Cones, obstacles and free-space estimation |
 | `control` | Planned | Path tracking and command arbitration |
-| `autonomy` | Baseline | C++ LiDAR cone detection, local planning and Pure Pursuit |
+| `autonomy` | Implemented baseline | C++ LiDAR local planning, saved-route planning and Pure Pursuit |
+| `slam` | Implemented baseline | Sensor odometry, SLAM Toolbox mapping/localization and route recording |
 
 Generated `build`, `install`, `log`, `generated`, and `results` directories are
 not source and must not be committed.

@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(fs_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -35,6 +36,17 @@ target_include_directories(local_planner PRIVATE include)
 target_link_libraries(local_planner autonomy_geometry)
 ament_target_dependencies(local_planner geometry_msgs nav_msgs rclcpp)
 
+add_executable(track_reference_planner src/track_reference_planner.cpp)
+target_compile_features(track_reference_planner PUBLIC cxx_std_17)
+ament_target_dependencies(track_reference_planner
+  fs_msgs geometry_msgs nav_msgs rclcpp std_msgs tf2)
+
+add_executable(route_planner src/route_planner.cpp)
+target_compile_features(route_planner PUBLIC cxx_std_17)
+target_link_libraries(route_planner nlohmann_json::nlohmann_json)
+ament_target_dependencies(route_planner
+  geometry_msgs nav_msgs rclcpp std_msgs tf2 tf2_ros)
+
 add_executable(pure_pursuit src/pure_pursuit.cpp)
 target_compile_features(pure_pursuit PUBLIC cxx_std_17)
 target_include_directories(pure_pursuit PRIVATE include)
@@ -42,7 +54,7 @@ target_link_libraries(pure_pursuit autonomy_geometry)
 ament_target_dependencies(pure_pursuit
   fs_msgs geometry_msgs nav_msgs rclcpp std_msgs std_srvs)
 
-install(TARGETS autonomy_geometry cone_detector local_planner pure_pursuit
+install(TARGETS autonomy_geometry cone_detector local_planner track_reference_planner route_planner pure_pursuit
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME})

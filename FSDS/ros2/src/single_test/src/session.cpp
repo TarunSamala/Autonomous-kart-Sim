@@ -3,6 +3,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <memory>
 #include <optional>
@@ -31,6 +32,8 @@ public:
     manifest_path_ = declare_parameter<std::string>("manifest_path", "");
     results_directory_ = declare_parameter<std::string>("results_directory", "results");
     const bool auto_start = declare_parameter<bool>("auto_start", false);
+    target_laps_ = declare_parameter<int>("target_laps", 1);
+    minimum_lap_distance_m_ = declare_parameter<double>("minimum_lap_distance_m", 100.0);
     if (manifest_path_.empty()) {
       throw std::invalid_argument("manifest_path must not be empty");
     }
@@ -40,9 +43,15 @@ public:
     }
     manifest_ = json::parse(manifest_stream);
     test_id_ = manifest_.at("test").at("id").get<std::string>();
+    operation_ = manifest_.at("test").value("operation", "manual");
     max_duration_s_ = manifest_.at("test").at("max_duration_s").get<double>();
     if (!std::isfinite(max_duration_s_) || max_duration_s_ <= 0.0) {
       throw std::invalid_argument("manifest max_duration_s must be positive");
+    }
+    if (target_laps_ < 0 || !std::isfinite(minimum_lap_distance_m_) ||
+      minimum_lap_distance_m_ < 0.0)
+    {
+      throw std::invalid_argument("invalid lap-completion parameters");
     }
 
     status_pub_ = create_publisher<std_msgs::msg::String>(
@@ -74,8 +83,8 @@ public:
 
     set_status("READY");
     RCLCPP_INFO(
-      get_logger(), "Single Test '%s' ready; manual operation, %.1f s limit",
-      test_id_.c_str(), max_duration_s_);
+      get_logger(), "Single Test '%s' ready; %s operation, %.1f s limit",
+      test_id_.c_str(), operation_.c_str(), max_duration_s_);
     if (auto_start) {
       start();
     }
@@ -134,6 +143,8 @@ private:
     max_speed_mps_ = 0.0;
     speed_samples_ = 0;
     down_or_out_cones_ = 0;
+    cone_count_at_start_ = latest_cone_count_.value_or(0);
+    lap_count_at_start_ = latest_lap_times_.size();
     lap_times_.clear();
     set_status("RUNNING");
   }
@@ -161,11 +172,28 @@ private:
 
   void extra_info_callback(const fs_msgs::msg::ExtraInfo::SharedPtr message)
   {
+    latest_cone_count_ = message->doo_counter;
+    latest_lap_times_.assign(message->laps.begin(), message->laps.end());
     if (!running_) {
       return;
     }
-    down_or_out_cones_ = message->doo_counter;
-    lap_times_.assign(message->laps.begin(), message->laps.end());
+    down_or_out_cones_ = message->doo_counter >= cone_count_at_start_ ?
+      message->doo_counter - cone_count_at_start_ : message->doo_counter;
+    const std::size_t first_lap = message->laps.size() >= lap_count_at_start_ ?
+      lap_count_at_start_ : 0;
+    lap_times_.assign(message->laps.begin() + first_lap, message->laps.end());
+    if (target_laps_ > 0 && lap_times_.size() >= static_cast<std::size_t>(target_laps_)) {
+      if (distance_m_ < minimum_lap_distance_m_) {
+        RCLCPP_WARN(
+          get_logger(),
+          "Ignoring start-line lap event after only %.1f m (minimum %.1f m)",
+          distance_m_, minimum_lap_distance_m_);
+        lap_count_at_start_ = message->laps.size();
+        lap_times_.clear();
+        return;
+      }
+      finish("lap_target");
+    }
   }
 
   void timer_callback()
@@ -220,9 +248,12 @@ private:
   std::string manifest_path_;
   std::string results_directory_;
   std::string test_id_;
+  std::string operation_;
   std::string status_;
   std::string last_result_path_;
   double max_duration_s_{};
+  int target_laps_{1};
+  double minimum_lap_distance_m_{100.0};
   bool running_{false};
   SteadyClock::time_point started_at_{};
   std::optional<SteadyClock::time_point> last_speed_at_;
@@ -231,6 +262,10 @@ private:
   double max_speed_mps_{0.0};
   std::size_t speed_samples_{0};
   uint32_t down_or_out_cones_{0};
+  uint32_t cone_count_at_start_{0};
+  std::size_t lap_count_at_start_{0};
+  std::optional<uint32_t> latest_cone_count_;
+  std::vector<float> latest_lap_times_;
   std::vector<float> lap_times_;
   json manifest_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr status_pub_;

@@ -1,0 +1,44 @@
+<launch>
+  <arg name="use_sim_time" default="false"/>
+  <arg name="use_vio" default="false"/>
+  <arg name="config" default="$(find-pkg-share slam)/config/slam_toolbox_mapping.yaml"/>
+
+  <!-- Chassis IMU + GSS is the deterministic default. RGB-D VIO remains an
+       explicit benchmark variant selected with use_vio:=true. -->
+  <include if="$(var use_vio)" file="$(find-pkg-share vio)/launch/fsds_vio.launch.py">
+    <arg name="use_sim_time" value="$(var use_sim_time)"/>
+    <arg name="publish_tf" value="true"/>
+    <arg name="point_cloud" value="false"/>
+    <arg name="odom_frame" value="sensor/odom"/>
+  </include>
+
+  <node unless="$(var use_vio)" pkg="slam" exec="sensor_odometry"
+        name="sensor_odometry" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </node>
+
+  <node pkg="pointcloud_to_laserscan" exec="pointcloud_to_laserscan_node"
+        name="lidar_scan_adapter" output="screen">
+    <remap from="cloud_in" to="/fsds/lidar/Lidar1"/>
+    <remap from="scan" to="/sensors/lidar/scan"/>
+    <param name="target_frame" value="fsds/Lidar1"/>
+    <param name="transform_tolerance" value="0.05"/>
+    <param name="min_height" value="-0.05"/>
+    <param name="max_height" value="0.05"/>
+    <param name="angle_min" value="-3.14159265"/>
+    <param name="angle_max" value="3.14159265"/>
+    <param name="angle_increment" value="0.00392699"/>
+    <param name="scan_time" value="0.10"/>
+    <param name="range_min" value="0.40"/>
+    <param name="range_max" value="25.0"/>
+    <param name="use_inf" value="true"/>
+    <param name="inf_epsilon" value="0.01"/>
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </node>
+
+  <node pkg="slam_toolbox" exec="async_slam_toolbox_node"
+        name="slam_toolbox" output="screen">
+    <param from="$(var config)"/>
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </node>
+</launch>

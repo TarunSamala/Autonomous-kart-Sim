@@ -266,6 +266,13 @@ void AirsimROSWrapper::create_ros_pubs_from_settings_json()
             auto& sensor_name = curr_sensor_map.first;
             auto& sensor_setting = curr_sensor_map.second;
 
+            // AirSim excludes disabled sensors at runtime. Mirroring that
+            // decision here prevents ROS timers from repeatedly requesting a
+            // sensor that does not exist (for example a disabled Lidar2).
+            if (!sensor_setting->enabled) {
+                continue;
+            }
+
             switch (sensor_setting->sensor_type)
             {
             case msr::airlib::SensorBase::SensorType::Imu:
@@ -387,34 +394,33 @@ sensor_msgs::msg::PointCloud2 AirsimROSWrapper::get_lidar_msg_from_airsim(const 
     sensor_msgs::msg::PointCloud2 lidar_msg;
     lidar_msg.header.frame_id = "fsds/"+lidar_name;
 
-    if (lidar_data.point_cloud.size() > 3)
+    // PointCloud2 consumers require the field schema even when a scan is
+    // empty. AirSim may legitimately return no hits, especially for a
+    // single-plane LiDAR in an open scene.
+    lidar_msg.height = 1;
+    lidar_msg.width = lidar_data.point_cloud.size() / 3;
+    lidar_msg.fields.resize(3);
+    lidar_msg.fields[0].name = "x";
+    lidar_msg.fields[1].name = "y";
+    lidar_msg.fields[2].name = "z";
+    int offset = 0;
+    for (size_t d = 0; d < lidar_msg.fields.size(); ++d, offset += 4)
     {
-        lidar_msg.height = 1;
-        lidar_msg.width = lidar_data.point_cloud.size() / 3;
+        lidar_msg.fields[d].offset = offset;
+        lidar_msg.fields[d].datatype = sensor_msgs::msg::PointField::FLOAT32;
+        lidar_msg.fields[d].count = 1;
+    }
+    lidar_msg.is_bigendian = false;
+    lidar_msg.point_step = offset; // 4 bytes * 3 float fields
+    lidar_msg.row_step = lidar_msg.point_step * lidar_msg.width;
+    lidar_msg.is_dense = true;
 
-        lidar_msg.fields.resize(3);
-        lidar_msg.fields[0].name = "x";
-        lidar_msg.fields[1].name = "y";
-        lidar_msg.fields[2].name = "z";
-        int offset = 0;
-
-        for (size_t d = 0; d < lidar_msg.fields.size(); ++d, offset += 4)
-        {
-            lidar_msg.fields[d].offset = offset;
-            lidar_msg.fields[d].datatype = sensor_msgs::msg::PointField::FLOAT32;
-            lidar_msg.fields[d].count = 1;
-        }
-
-        lidar_msg.is_bigendian = false;
-        lidar_msg.point_step = offset; // 4 * num fields
-        lidar_msg.row_step = lidar_msg.point_step * lidar_msg.width;
-
-        lidar_msg.is_dense = true; // todo
-        std::vector<float> data_std = lidar_data.point_cloud;
-
-        const unsigned char *bytes = reinterpret_cast<const unsigned char *>(&data_std[0]);
-        std::vector<unsigned char> lidar_msg_data(bytes, bytes + sizeof(float) * data_std.size());
-        lidar_msg.data = std::move(lidar_msg_data);
+    const size_t coordinate_count = static_cast<size_t>(lidar_msg.width) * 3;
+    if (coordinate_count > 0)
+    {
+        const unsigned char *bytes = reinterpret_cast<const unsigned char *>(
+            lidar_data.point_cloud.data());
+        lidar_msg.data.assign(bytes, bytes + sizeof(float) * coordinate_count);
     }
     return lidar_msg;
 }
