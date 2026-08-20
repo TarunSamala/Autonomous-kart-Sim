@@ -125,7 +125,7 @@
           "X": 0.45,
           "Y": 0,
           "Yaw": 0,
-        "Z": 0.2
+          "Z": 0.2
         },
         "Lidar2": {
           "DrawDebugPoints": false,
