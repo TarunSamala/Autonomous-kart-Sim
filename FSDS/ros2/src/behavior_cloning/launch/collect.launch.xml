@@ -1,0 +1,21 @@
+<launch>
+  <arg name="run_directory"/>
+  <arg name="manifest_path" default=""/>
+  <arg name="collector_config"
+       default="$(find-pkg-share behavior_cloning)/config/collector.yaml"/>
+  <arg name="teleop" default="true"/>
+
+  <node pkg="behavior_cloning" exec="demonstration_collector"
+        name="demonstration_collector" output="screen">
+    <param from="$(var collector_config)"/>
+    <param name="run_directory" value="$(var run_directory)"/>
+    <param name="manifest_path" value="$(var manifest_path)"/>
+  </node>
+
+  <node pkg="teleop" exec="keyboard_teleop" name="keyboard_teleop"
+        output="screen" if="$(var teleop)">
+    <param name="max_throttle" value="0.35"/>
+    <param name="max_brake" value="1.0"/>
+    <param name="max_steering" value="0.90"/>
+  </node>
+</launch>

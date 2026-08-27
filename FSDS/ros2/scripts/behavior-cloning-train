@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+modality="${1:-rgbd}"
+dataset="${2:-$workspace_root/generated/behavior_cloning/datasets}"
+output="${3:-$workspace_root/generated/behavior_cloning/models/$modality}"
+venv="$workspace_root/.venv-behavior-cloning"
+
+if [[ "$modality" != rgb && "$modality" != rgbd ]]; then
+  print -u2 "usage: behavior-cloning-train [rgb|rgbd] [dataset] [output]"
+  exit 2
+fi
+if [[ ! -x "$venv/bin/python" ]]; then
+  print -u2 "Training environment is missing. Create it once with:"
+  print -u2 "  cd $workspace_root"
+  print -u2 "  python3 -m venv --system-site-packages .venv-behavior-cloning"
+  print -u2 "  .venv-behavior-cloning/bin/pip install --index-url https://download.pytorch.org/whl/cpu 'torch>=2.2,<3'"
+  print -u2 "  .venv-behavior-cloning/bin/pip install -r src/behavior_cloning/training/requirements.txt"
+  exit 1
+fi
+
+exec "$venv/bin/python" "$workspace_root/src/behavior_cloning/training/train.py" \
+  --dataset "$dataset" --output "$output" --modality "$modality"

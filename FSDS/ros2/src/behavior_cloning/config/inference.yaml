@@ -1,0 +1,26 @@
+behavior_cloning_inference:
+  ros__parameters:
+    rgb_topic: /fsds/front_rgb/image_color
+    depth_topic: /fsds/front_depth/image_depth
+    speed_topic: /fsds/gss
+    extra_info_topic: /fsds/testing_only/extra_info
+    enabled: false
+    command_topic: /behavior_cloning/predicted_command
+    hold_brake_when_disabled: false
+    require_safety_telemetry: true
+    stop_on_cone_contact: true
+    stop_after_laps: 1
+    minimum_lap_distance_m: 100.0
+    prediction_timeout_s: 0.25
+    speed_timeout_s: 0.50
+    safety_timeout_s: 2.0
+    maximum_throttle: 0.35
+    maximum_brake: 1.0
+    maximum_steering: 1.0
+    steering_rate: 3.0
+    throttle_rate: 2.0
+    brake_rate: 5.0
+    launch_throttle: 0.45
+    launch_release_speed: 0.10
+    launch_pulse_duration_s: 0.10
+    launch_timeout_s: 0.75
