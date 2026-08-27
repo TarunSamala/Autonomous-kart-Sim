@@ -11,6 +11,7 @@ intentionally omit a project prefix so that the software graph stays concise.
 | `interfaces` | Planned | Shared messages and services |
 | `sensor_interface` | Implemented | Simulator/RealSense and vehicle sensor adapters |
 | `teleop` | Implemented | Manual keyboard control |
+| `behavior_cloning` | Implemented pipeline | HP60C RGB/RGB-D demonstrations, training/export and safety-gated C++ inference |
 | `vio` | Baseline | Synchronized RGB-D odometry with IMU initialization |
 | `vslam` | Baseline | RGB-D mapping, loop closure and global correction |
 | `state_estimator` | Planned | VIO, wheel odometry and chassis IMU fusion |

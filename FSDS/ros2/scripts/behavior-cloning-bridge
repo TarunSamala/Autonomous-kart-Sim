@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+workspace_root="${script_path:h:h}"
+settings="$workspace_root/generated/behavior_cloning/hp60c/settings.json"
+exec "$workspace_root/scripts/single-test-bridge" "$settings"

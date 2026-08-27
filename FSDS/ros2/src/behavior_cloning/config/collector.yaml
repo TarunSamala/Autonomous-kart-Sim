@@ -1,0 +1,17 @@
+demonstration_collector:
+  ros__parameters:
+    rgb_topic: /fsds/front_rgb/image_color
+    depth_topic: /fsds/front_depth/image_depth
+    rgb_camera_info_topic: /fsds/front_rgb/camera_info
+    depth_camera_info_topic: /fsds/front_depth/camera_info
+    control_topic: /fsds/control_command
+    speed_topic: /fsds/gss
+    extra_info_topic: /fsds/testing_only/extra_info
+    target_sample_hz: 10.0
+    sync_tolerance_s: 0.04
+    input_timeout_s: 0.20
+    minimum_depth_m: 0.2
+    maximum_depth_m: 4.0
+    jpeg_quality: 92
+    include_stationary: false
+    auto_record: false

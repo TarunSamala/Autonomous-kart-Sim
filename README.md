@@ -15,6 +15,7 @@ interfaces
 single_test
 sensor_interface
 teleop
+behavior_cloning
 vio
 vslam
 state_estimator
@@ -24,7 +25,8 @@ autonomy
 ```
 
 Implemented baselines currently include Single Test preparation/recording,
-sensor adapters, keyboard teleoperation, RGB-D odometry, RTAB-Map VSLAM, and a
-C++ LiDAR/Pure-Pursuit autonomy pipeline. Planned packages will be introduced as
+sensor adapters, keyboard teleoperation, HP60C RGB/RGB-D behavior-cloning data
+and C++ inference, RGB-D odometry, RTAB-Map VSLAM, and a C++
+LiDAR/Pure-Pursuit autonomy pipeline. Planned packages will be introduced as
 their common interfaces are defined. The older `fsds-autonomous-driving`
 repository is an archive and is not part of this workspace.

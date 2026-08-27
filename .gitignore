@@ -9,6 +9,7 @@ fsds-v2.2.0-linux/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+FSDS/ros2/.venv-behavior-cloning/
 
 # Runtime data
 *.db
