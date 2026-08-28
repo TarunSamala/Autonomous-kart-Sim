@@ -119,6 +119,10 @@ ros2 service call /single_test/stop std_srvs/srv/Trigger '{}'
 
 The result includes duration, integrated distance, average/max speed, lap
 times, down/out cone count, completion reason, and the exact manifest.
+An optional `run_metadata_path` parameter embeds additional immutable JSON such
+as behavior-model training and validation metadata. Setting
+`stop_on_cone_contact:=true` ends and writes the run on the first new cone
+contact.
 
 ## Run the saved-map autonomous benchmark
 

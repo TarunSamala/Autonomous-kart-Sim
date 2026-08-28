@@ -20,6 +20,7 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <exec_depend>teleop</exec_depend>
+  <exec_depend>single_test</exec_depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
 

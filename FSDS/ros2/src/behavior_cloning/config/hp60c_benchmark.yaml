@@ -1,0 +1,23 @@
+schema_version: 1
+
+test:
+  id: hp60c_behavior_cloning_benchmark
+  track: TrainingMap
+  max_duration_s: 60.0
+  operation: autonomy
+
+sensors:
+  lidar: off
+  depth_camera: hp60c
+  chassis_imu: true
+
+algorithms:
+  odometry: none
+  slam: none
+  planner: behavior_cloning
+  controller: behavior_cloning
+  filter: none
+
+artifacts:
+  map: null
+  route: null

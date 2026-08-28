@@ -1,0 +1,37 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
+source /opt/ros/humble/setup.zsh
+source "$workspace_root/install/setup.zsh"
+
+if ! ros2 service type /single_test/start >/dev/null 2>&1; then
+  print -u2 "behavior-cloning-benchmark-start: benchmark recorder is not ready"
+  exit 1
+fi
+if ! ros2 service type /behavior_cloning/enable >/dev/null 2>&1; then
+  print -u2 "behavior-cloning-benchmark-start: inference controller is not ready"
+  exit 1
+fi
+
+start_response="$(ros2 service call /single_test/start std_srvs/srv/Trigger '{}')"
+print -r -- "$start_response"
+if [[ "$start_response" != *"success=True"* && "$start_response" != *"success: true"* ]]; then
+  print -u2 "behavior-cloning-benchmark-start: recorder rejected the start request"
+  exit 1
+fi
+
+arm_response="$(ros2 service call /behavior_cloning/enable std_srvs/srv/SetBool '{data: true}')"
+print -r -- "$arm_response"
+if [[ "$arm_response" != *"success=True"* && "$arm_response" != *"success: true"* ]]; then
+  print -u2 "behavior-cloning-benchmark-start: controller refused to arm; stopping recorder"
+  ros2 service call /single_test/stop std_srvs/srv/Trigger '{}' || true
+  exit 1
+fi
