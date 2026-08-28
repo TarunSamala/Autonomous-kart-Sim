@@ -1,7 +1,9 @@
 <launch>
   <arg name="enabled" default="false"/>
-  <arg name="require_go" default="false"/>
+  <arg name="require_go" default="true"/>
   <arg name="config" default="$(find-pkg-share autonomy)/config/autonomy.yaml"/>
+  <arg name="rviz" default="false"/>
+  <arg name="rviz_config" default="$(find-pkg-share autonomy)/config/delaunay_planner.rviz"/>
 
   <node pkg="autonomy" exec="cone_detector" name="cone_detector" output="screen">
     <param from="$(var config)"/>
@@ -14,4 +16,6 @@
     <param name="enabled" value="$(var enabled)"/>
     <param name="require_go" value="$(var require_go)"/>
   </node>
+  <node pkg="rviz2" exec="rviz2" name="autonomy_rviz" output="screen"
+        args="-d $(var rviz_config)" if="$(var rviz)"/>
 </launch>

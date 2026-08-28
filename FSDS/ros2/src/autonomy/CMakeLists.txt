@@ -34,7 +34,7 @@ add_executable(local_planner src/local_planner.cpp)
 target_compile_features(local_planner PUBLIC cxx_std_17)
 target_include_directories(local_planner PRIVATE include)
 target_link_libraries(local_planner autonomy_geometry)
-ament_target_dependencies(local_planner geometry_msgs nav_msgs rclcpp)
+ament_target_dependencies(local_planner geometry_msgs nav_msgs rclcpp visualization_msgs)
 
 add_executable(track_reference_planner src/track_reference_planner.cpp)
 target_compile_features(track_reference_planner PUBLIC cxx_std_17)
