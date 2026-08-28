@@ -4,6 +4,7 @@
   <arg name="command_topic" default="/behavior_cloning/predicted_command"/>
   <arg name="enabled" default="false"/>
   <arg name="hold_brake_when_disabled" default="false"/>
+  <arg name="maximum_throttle" default="0.35"/>
   <arg name="config"
        default="$(find-pkg-share behavior_cloning)/config/inference.yaml"/>
 
@@ -15,5 +16,6 @@
     <param name="command_topic" value="$(var command_topic)"/>
     <param name="enabled" value="$(var enabled)"/>
     <param name="hold_brake_when_disabled" value="$(var hold_brake_when_disabled)"/>
+    <param name="maximum_throttle" value="$(var maximum_throttle)"/>
   </node>
 </launch>

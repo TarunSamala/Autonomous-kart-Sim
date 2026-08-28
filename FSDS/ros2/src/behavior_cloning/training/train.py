@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 import random
@@ -17,6 +18,14 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -402,6 +411,10 @@ def main() -> None:
             "steering": float(final_mae[0]),
             "throttle": float(final_mae[1]),
             "brake": float(final_mae[2]),
+        },
+        "artifacts": {
+            "model_onnx_sha256": sha256_file(onnx_path),
+            "model_pt_sha256": sha256_file(args.output / "model.pt"),
         },
         "seed": args.seed,
     }

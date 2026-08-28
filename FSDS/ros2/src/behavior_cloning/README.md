@@ -187,3 +187,43 @@ ros2 topic echo /fsds/testing_only/extra_info
 First tests should use a reduced speed and active human supervision. A model is
 accepted for benchmark use only after multiple complete held-out laps with zero
 cone contacts. A single successful lap is not evidence of generalization.
+
+## 9. Timed sub-60-second benchmark
+
+Prepare the immutable 60-second HP60C benchmark contract before starting FSDS:
+
+```zsh
+scripts/behavior-cloning-benchmark-prepare
+```
+
+Restart FSDS and connect the behavior-cloning bridge. Stop keyboard teleop and
+all other controllers, then launch a disabled benchmark at a conservative
+throttle limit:
+
+```zsh
+scripts/behavior-cloning-benchmark \
+  generated/behavior_cloning/models/rgbd 0.20
+```
+
+Start the recorder and controller together from a second terminal:
+
+```zsh
+scripts/behavior-cloning-benchmark-start
+```
+
+The run ends on a complete lap, the first cone contact, or the 60-second time
+limit. An emergency/manual stop is available with:
+
+```zsh
+scripts/behavior-cloning-benchmark-stop
+```
+
+Results are stored under `results/behavior_cloning/<model-directory>/`. Each
+JSON result includes duration, FSDS lap time, distance, average/max speed, cone
+contacts, the immutable sensor/algorithm manifest, and the complete model
+metadata. Increase the throttle limit progressively (`0.20`, `0.25`, `0.30`,
+then `0.35`) only after repeatable cone-free laps.
+
+Use at least ten attempts for a comparison. The recommended acceptance target
+is a median lap below 60 seconds, zero cone contacts or off-track events, zero
+safety interventions, and at least nine completed laps out of ten.

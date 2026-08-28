@@ -1,0 +1,29 @@
+<launch>
+  <arg name="model_path"/>
+  <arg name="metadata_path"/>
+  <arg name="manifest_path"/>
+  <arg name="results_directory"/>
+  <arg name="maximum_throttle" default="0.20"/>
+  <arg name="target_laps" default="1"/>
+  <arg name="minimum_lap_distance_m" default="100.0"/>
+
+  <include file="$(find-pkg-share behavior_cloning)/launch/inference.launch.xml">
+    <arg name="model_path" value="$(var model_path)"/>
+    <arg name="metadata_path" value="$(var metadata_path)"/>
+    <arg name="command_topic" value="/fsds/control_command"/>
+    <arg name="enabled" value="false"/>
+    <arg name="hold_brake_when_disabled" value="true"/>
+    <arg name="maximum_throttle" value="$(var maximum_throttle)"/>
+  </include>
+
+  <node pkg="single_test" exec="single_test_session"
+        name="single_test_session" output="screen">
+    <param name="manifest_path" value="$(var manifest_path)"/>
+    <param name="run_metadata_path" value="$(var metadata_path)"/>
+    <param name="results_directory" value="$(var results_directory)"/>
+    <param name="target_laps" value="$(var target_laps)"/>
+    <param name="minimum_lap_distance_m" value="$(var minimum_lap_distance_m)"/>
+    <param name="stop_on_cone_contact" value="true"/>
+    <param name="auto_start" value="false"/>
+  </node>
+</launch>

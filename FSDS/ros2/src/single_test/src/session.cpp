@@ -30,8 +30,10 @@ public:
   : Node("single_test_session")
   {
     manifest_path_ = declare_parameter<std::string>("manifest_path", "");
+    run_metadata_path_ = declare_parameter<std::string>("run_metadata_path", "");
     results_directory_ = declare_parameter<std::string>("results_directory", "results");
     const bool auto_start = declare_parameter<bool>("auto_start", false);
+    stop_on_cone_contact_ = declare_parameter<bool>("stop_on_cone_contact", false);
     target_laps_ = declare_parameter<int>("target_laps", 1);
     minimum_lap_distance_m_ = declare_parameter<double>("minimum_lap_distance_m", 100.0);
     if (manifest_path_.empty()) {
@@ -42,6 +44,13 @@ public:
       throw std::invalid_argument("cannot open manifest: " + manifest_path_);
     }
     manifest_ = json::parse(manifest_stream);
+    if (!run_metadata_path_.empty()) {
+      std::ifstream metadata_stream(run_metadata_path_);
+      if (!metadata_stream) {
+        throw std::invalid_argument("cannot open run metadata: " + run_metadata_path_);
+      }
+      run_metadata_ = json::parse(metadata_stream);
+    }
     test_id_ = manifest_.at("test").at("id").get<std::string>();
     operation_ = manifest_.at("test").value("operation", "manual");
     max_duration_s_ = manifest_.at("test").at("max_duration_s").get<double>();
@@ -179,6 +188,10 @@ private:
     }
     down_or_out_cones_ = message->doo_counter >= cone_count_at_start_ ?
       message->doo_counter - cone_count_at_start_ : message->doo_counter;
+    if (stop_on_cone_contact_ && down_or_out_cones_ > 0) {
+      finish("cone_contact");
+      return;
+    }
     const std::size_t first_lap = message->laps.size() >= lap_count_at_start_ ?
       lap_count_at_start_ : 0;
     lap_times_.assign(message->laps.begin() + first_lap, message->laps.end());
@@ -231,7 +244,8 @@ private:
       {"speed_samples", speed_samples_},
       {"down_or_out_cones", down_or_out_cones_},
       {"lap_times_s", lap_times_},
-      {"manifest", manifest_}
+      {"manifest", manifest_},
+      {"run_metadata", run_metadata_}
     };
     std::ofstream stream(result_path);
     if (!stream) {
@@ -246,6 +260,7 @@ private:
   }
 
   std::string manifest_path_;
+  std::string run_metadata_path_;
   std::string results_directory_;
   std::string test_id_;
   std::string operation_;
@@ -253,6 +268,7 @@ private:
   std::string last_result_path_;
   double max_duration_s_{};
   int target_laps_{1};
+  bool stop_on_cone_contact_{false};
   double minimum_lap_distance_m_{100.0};
   bool running_{false};
   SteadyClock::time_point started_at_{};
@@ -268,6 +284,7 @@ private:
   std::vector<float> latest_lap_times_;
   std::vector<float> lap_times_;
   json manifest_;
+  json run_metadata_{nullptr};
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr status_pub_;
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr speed_sub_;
   rclcpp::Subscription<fs_msgs::msg::ExtraInfo>::SharedPtr extra_info_sub_;

@@ -1,0 +1,14 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+output_root="$workspace_root/generated/behavior_cloning/hp60c_benchmark"
+exec "$workspace_root/scripts/single-test-prepare" \
+  "$workspace_root/src/behavior_cloning/config/hp60c_benchmark.yaml" \
+  "$output_root"
