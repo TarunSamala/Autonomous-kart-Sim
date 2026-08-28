@@ -12,6 +12,47 @@ This package is an entirely C++ LiDAR autonomy baseline for FSDS:
   -> /fsds/control_command
 ```
 
+## AMZ-style first-lap planner
+
+The default local planner now uses an AMZ-inspired first-lap strategy without
+requiring VIO, VSLAM, a saved map, or FSDS testing-only track geometry:
+
+1. Combine the currently detected left and right cone positions.
+2. Build a Bowyer-Watson Delaunay triangulation.
+3. Keep opposite-boundary Delaunay edges whose lengths are valid track widths.
+4. Treat the valid edge midpoints as centerline gates.
+5. Connect gates that share a Delaunay triangle.
+6. Grow possible centerlines with a bounded beam search.
+7. Rank paths by heading smoothness, gate-width consistency, point spacing,
+   sensor-horizon coverage, start alignment, and boundary-color ordering.
+8. Publish the lowest-cost path to the existing Pure Pursuit controller.
+
+If triangulation cannot produce a safe two-point path, the planner falls back
+to paired cones and then to a conservative single-boundary offset. An empty
+path is published if no method is safe enough; the controller then brakes on
+its existing stale/path checks.
+
+Debug output is published on `/autonomy/debug/delaunay_planner`: dark lines are
+the triangulation, pale blue lines are valid cross-track gates, green lines are
+beam-search candidates, and the thick red line is the selected candidate. The
+magenta `/autonomy/local_path` is the smoothed path actually consumed by the
+controller.
+
+Launch perception and planning disabled, with the dedicated top-down view:
+
+```zsh
+ros2 launch autonomy fsds_autonomy.launch.xml enabled:=false rviz:=true
+```
+
+Before arming, confirm that the selected red/magenta path stays between the
+detected boundaries through straights and corners:
+
+```zsh
+ros2 topic hz /autonomy/local_path
+ros2 topic echo /autonomy/local_path --once
+ros2 topic hz /autonomy/debug/delaunay_planner
+```
+
 The controller starts disabled, requires fresh LiDAR-derived path and GSS data,
 and requires the FSDS GO signal. Missing or stale input commands full brake.
 Do not run keyboard teleop simultaneously because it publishes to the same
@@ -19,7 +60,9 @@ control topic.
 
 ## LiDAR profile
 
-`FSDS/settings.json` configures `Lidar1` at `(0.45, 0.0, 0.55)` m with:
+The active `FSDS/settings.json` must have `Lidar1` enabled before FSDS starts.
+For the first functional test, prepare the `fsds_16` development profile; it
+configures `Lidar1` at its existing mount with:
 
 - 16 vertical layers spanning -20 through +5 degrees
 - 4096 firings per scan
@@ -42,9 +85,10 @@ minimum throttle. The controller therefore applies a bounded launch assist:
 3. If speed is not reached within `launch_timeout`, command full brake and
    disarm. It never retries automatically.
 
-Defaults are deliberately conservative: 0.45 throttle, 0.50 m/s release speed,
-and 0.80 seconds maximum. Tune these values in `config/autonomy.yaml` from
-recorded GSS and command data rather than changing Unreal friction blindly.
+Defaults are deliberately conservative: a 0.55 throttle pulse for 0.10 seconds,
+a 0.10 m/s release speed, and a 0.75 second failure timeout. Tune these values
+in `config/autonomy.yaml` from recorded GSS and command data rather than
+changing Unreal friction blindly.
 
 ## Build
 
@@ -56,6 +100,21 @@ source /opt/ros/humble/setup.zsh
 colcon build --symlink-install --packages-up-to autonomy
 source install/setup.zsh
 ```
+
+## Prepare FSDS
+
+Before launching FSDS, apply the Phase 1 sensor contract from the repository
+root. This enables the dense development LiDAR and keeps the D455 stream
+available for visualization and later algorithms:
+
+```zsh
+FSDS/ros2/scripts/single-test-prepare \
+  FSDS/ros2/src/single_test/config/delaunay_phase1.yaml
+```
+
+The command validates and replaces `FSDS/settings.json`, preserving its first
+pre-test version as `FSDS/settings.json.pre-single-test`. Restart FSDS after
+every sensor-profile change because AirSim reads sensor settings at startup.
 
 ## Validate without movement
 

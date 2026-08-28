@@ -20,6 +20,7 @@
   <depend>tf2_ros</depend>
   <depend>fs_msgs</depend>
   <exec_depend>launch</exec_depend>
+  <exec_depend>rviz2</exec_depend>
   <exec_depend>slam</exec_depend>
   <test_depend>ament_cmake_gtest</test_depend>
 

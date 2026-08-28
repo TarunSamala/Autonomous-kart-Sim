@@ -1,0 +1,21 @@
+schema_version: 1
+
+test:
+  id: fsds16_d455_delaunay_phase1
+  track: TrainingMap
+  max_duration_s: 180.0
+  operation: autonomy
+
+sensors:
+  # Use the dense development LiDAR for the first functional baseline. Named
+  # hardware profiles can be benchmarked after the pipeline completes a lap.
+  lidar: fsds_16
+  depth_camera: d455
+  chassis_imu: true
+
+algorithms:
+  odometry: gss
+  slam: none
+  planner: delaunay_beam_search
+  controller: pure_pursuit
+  filter: none

@@ -1,0 +1,136 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.35
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 205; 205; 205
+      Enabled: true
+      Line Style:
+        Line Width: 0.02
+        Value: Lines
+      Name: Ground Grid
+      Plane: XY
+      Plane Cell Count: 30
+      Reference Frame: fsds/FSCar
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Color: 90; 90; 90
+      Color Transformer: FlatColor
+      Enabled: true
+      Name: LiDAR
+      Position Transformer: XYZ
+      Selectable: false
+      Size (Pixels): 2
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Value: /fsds/lidar/Lidar1
+      Use Fixed Frame: true
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Detected Blue Cones
+      Namespaces:
+        left: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /autonomy/debug/left_cones
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Detected Yellow Cones
+      Namespaces:
+        right: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /autonomy/debug/right_cones
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Delaunay Candidate Planner
+      Namespaces:
+        candidate_paths: true
+        selected_path: true
+        triangulation: true
+        valid_gates: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /autonomy/debug/delaunay_planner
+      Value: true
+    - Class: rviz_default_plugins/Path
+      Color: 230; 40; 255
+      Enabled: true
+      Line Style: Lines
+      Line Width: 0.08
+      Name: Controller Path
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /autonomy/local_path
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Front RGB
+      Normalize Range: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Value: /fsds/front_rgb/image_color
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 245; 245; 245
+    Fixed Frame: fsds/FSCar
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 18
+      Focal Point:
+        X: 6
+        Y: 0
+        Z: 0
+      Name: Top Down
+      Pitch: 1.56
+      Target Frame: fsds/FSCar
+      Value: Orbit (rviz)
+      Yaw: 0
+    Saved: ~
+Window Geometry:
+  Height: 900
+  Width: 1600
