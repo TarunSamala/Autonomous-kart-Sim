@@ -25,7 +25,7 @@ if 'team' not in config:
 print("echo Current team: " + config['team']['name'] + ";")
 
 # Write team specific car settings to settings.json
-filename = os.path.expanduser('~/Formula-Student-Driverless-Simulator/settings.json')
+filename = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'settings.json'))
 with open(filename, 'w') as file:
     json.dump(config['team']['car_settings'], file, sort_keys=True, indent=4, separators=(',', ': '))
 

@@ -41,7 +41,8 @@ characteristics of the real device.
 Launch the packaged simulator from the repository root:
 
 ```zsh
-./fsds-v2.2.0-linux/FSDS.sh
+./fsds-v2.2.0-linux/FSDS.sh \
+  -settings "$PWD/FSDS/settings.json"
 ```
 
 Then launch the matching bridge:

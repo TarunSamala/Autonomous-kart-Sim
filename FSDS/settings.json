@@ -50,17 +50,17 @@
         "front_depth": {
           "CaptureSettings": [
             {
-              "FOV_Degrees": 73.8,
+              "FOV_Degrees": 86.0,
               "Height": 480,
               "ImageType": 2,
-              "Width": 640
+              "Width": 848
             }
           ],
           "Pitch": 0.0,
           "Roll": 0.0,
           "RosEnabled": false,
           "RosFrameId": "fsds/front_rgb",
-          "RosFramerate": 20.0,
+          "RosFramerate": 30.0,
           "X": 0.8,
           "Y": 0.0,
           "Yaw": 0.0,
@@ -69,10 +69,10 @@
         "front_rgb": {
           "CaptureSettings": [
             {
-              "FOV_Degrees": 80.9,
+              "FOV_Degrees": 86.0,
               "Height": 480,
               "ImageType": 0,
-              "Width": 640
+              "Width": 848
             }
           ],
           "Pitch": 0.0,
@@ -80,7 +80,7 @@
           "RosDepthCamera": "front_depth",
           "RosEnabled": true,
           "RosFrameId": "fsds/front_rgb",
-          "RosFramerate": 20.0,
+          "RosFramerate": 30.0,
           "X": 0.8,
           "Y": 0.0,
           "Yaw": 0.0,
@@ -110,18 +110,18 @@
         },
         "Lidar1": {
           "DrawDebugPoints": false,
-          "Enabled": false,
-          "HorizontalFOVEnd": 180.0,
-          "HorizontalFOVStart": -180.0,
-          "NumberOfLasers": 1,
+          "Enabled": true,
+          "HorizontalFOVEnd": 90.0,
+          "HorizontalFOVStart": -90.0,
+          "NumberOfLasers": 16,
           "Pitch": 0,
-          "PointsPerScan": 1600,
-          "Range": 25.0,
+          "PointsPerScan": 4096,
+          "Range": 100.0,
           "Roll": 0,
           "RotationsPerSecond": 10,
           "SensorType": 6,
-          "VerticalFOVLower": 0.0,
-          "VerticalFOVUpper": 0.0,
+          "VerticalFOVLower": -20.0,
+          "VerticalFOVUpper": 5.0,
           "X": 0.45,
           "Y": 0,
           "Yaw": 0,

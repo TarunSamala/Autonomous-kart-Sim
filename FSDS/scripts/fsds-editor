@@ -1,0 +1,29 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+fsds_root="${script_path:h:h}"
+repository_parent="${fsds_root:h:h}"
+project_file="$fsds_root/UE4Project/FSOnline.uproject"
+settings_file="${FSDS_SETTINGS_PATH:-$fsds_root/settings.json}"
+settings_file="${settings_file:A}"
+editor="${UE4_EDITOR:-$repository_parent/UnrealEngine/Engine/Binaries/Linux/UE4Editor}"
+
+if [[ ! -x "$editor" ]]; then
+  print -u2 "fsds-editor: UE4Editor is not executable: $editor"
+  print -u2 "Set UE4_EDITOR to the complete UE4Editor executable path."
+  exit 1
+fi
+if [[ ! -f "$project_file" ]]; then
+  print -u2 "fsds-editor: project does not exist: $project_file"
+  exit 1
+fi
+if [[ ! -f "$settings_file" ]]; then
+  print -u2 "fsds-editor: settings do not exist: $settings_file"
+  exit 1
+fi
+
+print "FSDS project:  $project_file"
+print "FSDS settings: $settings_file"
+exec "$editor" "$project_file" -settings "$settings_file" "$@"
