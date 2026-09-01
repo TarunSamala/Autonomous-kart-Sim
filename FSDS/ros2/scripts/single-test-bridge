@@ -8,16 +8,18 @@ if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
 fi
 
 workspace_root="${script_path:h:h}"
-generated_settings="${1:-$workspace_root/generated/single_test/settings.json}"
-if [[ ! -f "$generated_settings" ]]; then
-  print -u2 "single-test-bridge: settings not found: $generated_settings"
+settings_file="${1:-$workspace_root/../settings.json}"
+settings_file="${settings_file:A}"
+if [[ ! -f "$settings_file" ]]; then
+  print -u2 "single-test-bridge: settings not found: $settings_file"
   exit 1
 fi
 
 unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
 source /opt/ros/humble/setup.zsh
 source "$workspace_root/install/setup.zsh"
-export FSDS_SETTINGS_PATH="$generated_settings"
+export FSDS_SETTINGS_PATH="$settings_file"
+print "single-test-bridge: using $FSDS_SETTINGS_PATH"
 
 if ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; then
   print "single-test-bridge: bridge already connected; monitoring it"

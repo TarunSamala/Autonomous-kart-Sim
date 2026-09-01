@@ -47,23 +47,30 @@ Valid LiDAR profiles are `a1m8`, `a3m1`, and `fsds_16`. Valid depth profiles
 are `hp60c`, `d415`, `d435`, and `d455`. A custom test YAML and output
 directory can still be passed as the first two positional arguments.
 
-Never overwrite the repository's base `FSDS/settings.json` for an experiment.
-Restart FSDS with the generated file through its `-settings` argument; sensor
-changes are read only when the simulator starts:
+The `scripts/single-test-prepare` wrapper writes the generated contract under
+`generated/single_test/`, preserves the original active settings once as
+`FSDS/settings.json.pre-single-test`, and applies the generated settings to the
+canonical `FSDS/settings.json`. Sensor changes are read only when the simulator
+starts, so restart the locally built editor with:
 
 ```zsh
-<path-to-release>/FSDS.sh \
-  -settings "$PWD/generated/single_test/settings.json"
+cd /home/satvara/Github/Autonomous-kart-Sim
+FSDS/scripts/fsds-editor
 ```
 
-Then start the bridge with the same generated file:
+Then start the bridge. By default, both the simulator launcher and this bridge
+wrapper read the canonical active `FSDS/settings.json`, preventing drift
+between two settings copies:
 
 ```zsh
 scripts/single-test-bridge
 ```
 
-The bridge reads `FSDS_SETTINGS_PATH`, creates only the selected camera topics,
-and derives its LiDAR polling period from the enabled profile's scan frequency.
+The bridge exports `FSDS_SETTINGS_PATH` to that canonical file, creates only
+the selected camera topics, and derives its LiDAR polling period from the
+enabled profile's scan frequency. Passing an explicit settings path to
+`scripts/single-test-bridge` remains available for advanced isolated runs, but
+the simulator must be launched with the same explicit path.
 
 ## Visualize sensors
 

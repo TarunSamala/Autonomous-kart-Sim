@@ -1032,7 +1032,7 @@ std::string AirsimROSWrapper::readTextFromFile(std::string settingsFilepath)
 {	
     // check if path exists	
     if(!std::ifstream(settingsFilepath.c_str()).good()){
-        throw std::invalid_argument("settings.json file does not exist. Ensure the ~/Formula-Student-Driverless-Simulator/settings.json file exists.");
+        throw std::invalid_argument("settings.json does not exist. Launch FSDS with -settings pointing to Autonomous-kart-Sim/FSDS/settings.json.");
     }
     std::ifstream ifs(settingsFilepath);	
     std::stringstream buffer;	

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import roslaunch
-from os.path import expanduser
+import os
 import json 
 import signal
 import sys
@@ -21,7 +21,12 @@ def args(argsmap):
     out += ' _' + str(k) + ":=" + str(argsmap[k])
   return out
 
-with open(expanduser("~")+'/Formula-Student-Driverless-Simulator/settings.json', 'r') as file:
+settings_path = os.environ.get(
+  'FSDS_SETTINGS_PATH',
+  os.path.realpath(os.path.join(
+    os.path.dirname(__file__), '..', '..', '..', '..', 'settings.json')))
+settings_path = os.path.realpath(os.path.expanduser(settings_path))
+with open(settings_path, 'r') as file:
     settings = json.load(file)
 
 if(len(settings['Vehicles']['FSCar']['Cameras']) == 0):

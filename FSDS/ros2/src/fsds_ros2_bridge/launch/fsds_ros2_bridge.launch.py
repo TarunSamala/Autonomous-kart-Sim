@@ -2,16 +2,34 @@ import launch
 import launch_ros.actions
 
 import os
-from os.path import expanduser
+from pathlib import Path
 import json 
 
 CAMERA_FRAMERATE = 30.0
 
 def generate_launch_description():
-    settings_path = os.environ.get(
-        'FSDS_SETTINGS_PATH',
-        expanduser("~") + '/Formula-Student-Driverless-Simulator/settings.json')
-    with open(settings_path, 'r') as file:
+    settings_path = os.environ.get('FSDS_SETTINGS_PATH')
+    if not settings_path:
+        # Keep the simulator settings inside this checkout.  The launch file
+        # is installed as a symlink during the local ROS 2 build, so walking
+        # up to the repository's FSDS directory also works from install/.
+        fsds_dir = next(
+            (parent for parent in Path(__file__).resolve().parents
+             if parent.name == 'FSDS'),
+            None,
+        )
+        if fsds_dir is None:
+            raise RuntimeError(
+                'FSDS_SETTINGS_PATH is required when the launch file is '
+                'run outside the Autonomous-kart-Sim checkout')
+        settings_path = fsds_dir / 'settings.json'
+    else:
+        settings_path = Path(settings_path).expanduser()
+    settings_path = settings_path.resolve()
+    if not settings_path.is_file():
+        raise RuntimeError(f'FSDS settings file does not exist: {settings_path}')
+    print(f'Using FSDS settings: {settings_path}')
+    with settings_path.open('r') as file:
         settings = json.load(file)
 
     camera_configs = settings['Vehicles']['FSCar']['Cameras']
@@ -25,7 +43,7 @@ def generate_launch_description():
     ]
     lidar_update_period = 1.0 / max(lidar_frequencies) if lidar_frequencies else 0.1
     if(not camera_configs):
-        print('no cameras configured in ~/Formula-Student-Driverless-Simulator/settings.json')
+        print(f'no cameras configured in {settings_path}')
 
     camera_nodes = []
     paired_depth_cameras = {
