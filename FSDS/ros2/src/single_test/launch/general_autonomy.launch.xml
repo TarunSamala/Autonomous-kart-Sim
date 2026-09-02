@@ -1,0 +1,23 @@
+<launch>
+  <arg name="manifest"/>
+  <arg name="results_directory"/>
+  <arg name="enabled" default="false"/>
+  <arg name="target_laps" default="1"/>
+  <arg name="minimum_lap_distance_m" default="100.0"/>
+
+  <!-- Evaluation oracle: this deliberately consumes testing-only FSDS track
+       and odometry. It isolates controller performance and is not deployable. -->
+  <include file="$(find-pkg-share autonomy)/launch/fsds_trackdrive_baseline.launch.xml">
+    <arg name="enabled" value="$(var enabled)"/>
+  </include>
+
+  <node pkg="single_test" exec="single_test_session"
+        name="single_test_session" output="screen">
+    <param name="manifest_path" value="$(var manifest)"/>
+    <param name="results_directory" value="$(var results_directory)"/>
+    <param name="target_laps" value="$(var target_laps)"/>
+    <param name="minimum_lap_distance_m" value="$(var minimum_lap_distance_m)"/>
+    <param name="stop_on_cone_contact" value="true"/>
+    <param name="auto_start" value="false"/>
+  </node>
+</launch>

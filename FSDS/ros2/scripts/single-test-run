@@ -1,0 +1,58 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+experiment="${1:-amz_style}"
+results_directory="${2:-$workspace_root/results/$experiment}"
+manifest="$workspace_root/generated/single_test/$experiment/manifest.json"
+
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
+source /opt/ros/humble/setup.zsh
+source "$workspace_root/install/setup.zsh"
+
+if [[ ! -f "$manifest" ]]; then
+  print -u2 "single-test-run: manifest not found: $manifest"
+  print -u2 "Run: scripts/single-test-prepare --experiment $experiment"
+  exit 1
+fi
+
+publisher_count="$(ros2 topic info /fsds/control_command 2>/dev/null | awk '/Publisher count:/ {print $3}')"
+if [[ -n "$publisher_count" && "$publisher_count" != 0 ]]; then
+  print -u2 "single-test-run: /fsds/control_command already has $publisher_count publisher(s)"
+  print -u2 "Stop teleop or the previous controller before starting another experiment."
+  exit 1
+fi
+
+case "$experiment" in
+  amz_style)
+    exec ros2 launch single_test amz_style.launch.xml \
+      manifest:="$manifest" results_directory:="$results_directory" enabled:=false
+    ;;
+  behavior_cloning)
+    exec "$workspace_root/scripts/behavior-cloning-benchmark" \
+      "$workspace_root/generated/behavior_cloning/models/rgbd" 0.20 "$manifest"
+    ;;
+  slam)
+    exec "$workspace_root/scripts/single-test-autonomy" \
+      "$workspace_root/generated/maps/TrainingMap/track_sensor" \
+      "$workspace_root/generated/maps/TrainingMap/route_sensor_slam.json" \
+      "$manifest" "$results_directory"
+    ;;
+  general_autonomy)
+    print -u2 "WARNING: general_autonomy uses FSDS testing-only track and odometry."
+    print -u2 "It is a controller oracle baseline, not deployable autonomy."
+    exec ros2 launch single_test general_autonomy.launch.xml \
+      manifest:="$manifest" results_directory:="$results_directory" enabled:=false
+    ;;
+  *)
+    print -u2 "single-test-run: unknown experiment: $experiment"
+    print -u2 "valid experiments: amz_style, behavior_cloning, slam, general_autonomy"
+    exit 2
+    ;;
+esac

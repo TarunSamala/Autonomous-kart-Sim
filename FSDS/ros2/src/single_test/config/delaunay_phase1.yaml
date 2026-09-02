@@ -19,3 +19,13 @@ algorithms:
   planner: delaunay_beam_search
   controller: pure_pursuit
   filter: none
+
+research:
+  family: amz_style
+  protocol: closed_loop_lap
+  reference: "AMZ Driverless: The Full Autonomous Racing System"
+  hypothesis: "LiDAR cone extraction and local Delaunay planning can complete one cone-free lap without a prior map."
+  independent_variables: [lidar_profile, target_speed, lookahead_distance]
+  dependent_metrics: [completion, lap_time_s, cone_contacts, distance_m, average_speed_mps, maximum_speed_mps]
+  random_seed: 0
+  uses_privileged_simulation_data: false

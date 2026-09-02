@@ -27,6 +27,18 @@ T optional(
   return node && node[key] ? node[key].as<T>() : default_value;
 }
 
+std::vector<std::string> optional_strings(
+  const YAML::Node & node, const char * key)
+{
+  if (!node || !node[key]) {
+    return {};
+  }
+  if (!node[key].IsSequence()) {
+    throw std::invalid_argument(std::string("research.") + key + " must be a sequence");
+  }
+  return node[key].as<std::vector<std::string>>();
+}
+
 bool valid_id(const std::string & value)
 {
   return !value.empty() && std::all_of(
@@ -74,6 +86,17 @@ TestConfig parse_test_config(const YAML::Node & root)
   const auto artifacts = root["artifacts"];
   result.map_file = optional<std::string>(artifacts, "map", "");
   result.route_file = optional<std::string>(artifacts, "route", "");
+  const auto research = root["research"];
+  result.experiment_family = optional<std::string>(
+    research, "family", "general_autonomy");
+  result.protocol = optional<std::string>(research, "protocol", "closed_loop_lap");
+  result.reference = optional<std::string>(research, "reference", "");
+  result.hypothesis = optional<std::string>(research, "hypothesis", "");
+  result.independent_variables = optional_strings(research, "independent_variables");
+  result.dependent_metrics = optional_strings(research, "dependent_metrics");
+  result.random_seed = optional<int>(research, "random_seed", 0);
+  result.uses_privileged_simulation_data = optional<bool>(
+    research, "uses_privileged_simulation_data", false);
 
   validate_test_config(result);
   return result;
@@ -105,6 +128,26 @@ void validate_test_config(const TestConfig & test)
   {
     throw std::invalid_argument(
             "autonomy operation requires algorithms.planner and algorithms.controller");
+  }
+  const std::vector<std::string> experiment_families{
+    "amz_style", "behavior_cloning", "slam", "general_autonomy"};
+  if (std::find(
+      experiment_families.begin(), experiment_families.end(), test.experiment_family) ==
+    experiment_families.end())
+  {
+    throw std::invalid_argument(
+            "research.family must be amz_style, behavior_cloning, slam, or general_autonomy");
+  }
+  if (!valid_id(test.protocol)) {
+    throw std::invalid_argument(
+            "research.protocol may contain only letters, digits, '-' and '_'");
+  }
+  if (test.random_seed < 0) {
+    throw std::invalid_argument("research.random_seed must not be negative");
+  }
+  if (test.operation == "autonomy" && test.dependent_metrics.empty()) {
+    throw std::invalid_argument(
+            "autonomy experiments require at least one research.dependent_metrics entry");
   }
 }
 

@@ -8,9 +8,19 @@ if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
 fi
 
 workspace_root="${script_path:h:h}"
+experiment="${1:-amz_style}"
 unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
 source /opt/ros/humble/setup.zsh
 source "$workspace_root/install/setup.zsh"
+
+if [[ "$experiment" == "behavior_cloning" ]]; then
+  exec "$workspace_root/scripts/behavior-cloning-benchmark-start"
+fi
+if [[ "$experiment" != "amz_style" && "$experiment" != "slam" &&
+      "$experiment" != "general_autonomy" ]]; then
+  print -u2 "single-test-arm: unknown experiment: $experiment"
+  exit 2
+fi
 
 if ! ros2 service type /single_test/start >/dev/null 2>&1; then
   print -u2 "single-test-arm: Single Test launch is not ready"

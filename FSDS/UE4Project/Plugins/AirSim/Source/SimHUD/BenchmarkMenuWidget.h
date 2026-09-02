@@ -6,8 +6,9 @@
 class SComboBoxBase;
 class STextBlock;
 
-DECLARE_DELEGATE_TwoParams(
+DECLARE_DELEGATE_ThreeParams(
     FOnPrepareBenchmark,
+    const FString&,
     const FString&,
     const FString&);
 
@@ -63,9 +64,12 @@ private:
     TSharedRef<SWidget> GenerateProfileOption(FProfileOptionPtr Option) const;
     void SelectLidar(FProfileOptionPtr Option, ESelectInfo::Type SelectInfo);
     void SelectDepth(FProfileOptionPtr Option, ESelectInfo::Type SelectInfo);
+    void SelectExperiment(FProfileOptionPtr Option, ESelectInfo::Type SelectInfo);
 
+    FText GetSelectedExperimentLabel() const;
     FText GetSelectedLidarLabel() const;
     FText GetSelectedDepthLabel() const;
+    FText GetExperimentDescription() const;
     FText GetLidarDescription() const;
     FText GetDepthDescription() const;
     FText GetConfigurationState() const;
@@ -77,11 +81,14 @@ private:
     FReply HandleClose();
 
 private:
+    TArray<FProfileOptionPtr> ExperimentOptions;
     TArray<FProfileOptionPtr> LidarOptions;
     TArray<FProfileOptionPtr> DepthOptions;
+    FProfileOptionPtr SelectedExperiment;
     FProfileOptionPtr SelectedLidar;
     FProfileOptionPtr SelectedDepth;
 
+    TSharedPtr<class SComboBox<FProfileOptionPtr>> ExperimentComboBox;
     TSharedPtr<class SComboBox<FProfileOptionPtr>> LidarComboBox;
     TSharedPtr<class SComboBox<FProfileOptionPtr>> DepthComboBox;
     TSharedPtr<STextBlock> BridgeStatusText;

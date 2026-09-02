@@ -3,6 +3,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include <yaml-cpp/yaml.h>
 
@@ -26,6 +27,14 @@ struct TestConfig
   std::string filter_algorithm{"none"};
   std::string map_file;
   std::string route_file;
+  std::string experiment_family{"general_autonomy"};
+  std::string protocol{"closed_loop_lap"};
+  std::string reference;
+  std::string hypothesis;
+  std::vector<std::string> independent_variables;
+  std::vector<std::string> dependent_metrics;
+  int random_seed{0};
+  bool uses_privileged_simulation_data{false};
 };
 
 struct LidarProfile

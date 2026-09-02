@@ -53,7 +53,10 @@ private:
     FString findBridgeStartScript() const;
     void updateBridgeProcessState();
     void setBridgeStatus(const FText& status, const FLinearColor& color);
-    void prepareSingleTest(const FString& lidar_profile, const FString& depth_profile);
+    void prepareSingleTest(
+        const FString& experiment,
+        const FString& lidar_profile,
+        const FString& depth_profile);
     FString findSingleTestPrepareScript() const;
     void updatePreparationProcessState();
     void setBenchmarkMenuVisible(bool visible);

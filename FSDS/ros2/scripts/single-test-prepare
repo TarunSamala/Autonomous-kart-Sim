@@ -17,10 +17,56 @@ source "$workspace_root/install/setup.zsh"
 test_config="$workspace_root/src/single_test/config/example_single_test.yaml"
 output_root="$workspace_root/generated/single_test"
 base_settings="$workspace_root/../settings.json"
+experiment=""
 
 if (( $# > 0 )) && [[ "$1" != --* ]]; then
   test_config="$1"
   shift
+fi
+
+typeset -a prepare_arguments
+while (( $# > 0 )); do
+  case "$1" in
+    --experiment)
+      if (( $# < 2 )); then
+        print -u2 "single-test-prepare: --experiment requires a value"
+        exit 2
+      fi
+      experiment="$2"
+      shift 2
+      ;;
+    --experiment=*)
+      experiment="${1#--experiment=}"
+      shift
+      ;;
+    *)
+      prepare_arguments+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ -n "$experiment" ]]; then
+  case "$experiment" in
+    amz_style)
+      test_config="$workspace_root/src/single_test/config/delaunay_phase1.yaml"
+      ;;
+    behavior_cloning)
+      test_config="$workspace_root/src/single_test/config/behavior_cloning.yaml"
+      ;;
+    slam)
+      test_config="$workspace_root/src/single_test/config/slam_toolbox_trackdrive.yaml"
+      ;;
+    general_autonomy)
+      test_config="$workspace_root/src/single_test/config/general_autonomy.yaml"
+      ;;
+    *)
+      print -u2 "single-test-prepare: unknown experiment: $experiment"
+      print -u2 "valid experiments: amz_style, behavior_cloning, slam, general_autonomy"
+      exit 2
+      ;;
+  esac
+  output_root="$workspace_root/generated/single_test/$experiment"
 fi
 if (( $# > 0 )) && [[ "$1" != --* ]]; then
   output_root="$1"
@@ -36,7 +82,7 @@ ros2 run single_test prepare_single_test -- \
   --base-settings "$base_settings" \
   --output-settings "$output_settings" \
   --output-manifest "$output_manifest" \
-  "$@"
+  "${prepare_arguments[@]}"
 
 # "Apply" means the simulator must read the prepared contract on its next
 # launch. Keep a stable recovery copy of the pre-benchmark configuration.

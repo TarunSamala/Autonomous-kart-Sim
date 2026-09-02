@@ -1,5 +1,8 @@
 # Project ROS 2 packages
 
+The shared autonomy research protocol and executable experiment matrix are
+documented in [RESEARCH_BENCHMARKS.md](RESEARCH_BENCHMARKS.md).
+
 Project packages live beside the FSDS bridge in `FSDS/ros2/src`. Package names
 intentionally omit a project prefix so that the software graph stays concise.
 

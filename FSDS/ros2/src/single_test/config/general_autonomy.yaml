@@ -1,0 +1,29 @@
+schema_version: 1
+
+test:
+  id: fsds_oracle_pure_pursuit_baseline
+  track: TrainingMap
+  max_duration_s: 180.0
+  operation: autonomy
+
+sensors:
+  lidar: fsds_16
+  depth_camera: d455
+  chassis_imu: true
+
+algorithms:
+  odometry: fsds_testing_only_odom
+  slam: none
+  planner: fsds_testing_only_track_reference
+  controller: pure_pursuit
+  filter: none
+
+research:
+  family: general_autonomy
+  protocol: oracle_control_baseline
+  reference: "Evaluation-only simulator oracle baseline"
+  hypothesis: "The controller can complete a clean lap when perception and localization error are removed."
+  independent_variables: [target_speed, lookahead_distance, steering_gain]
+  dependent_metrics: [completion, lap_time_s, cone_contacts, distance_m, average_speed_mps, maximum_speed_mps]
+  random_seed: 0
+  uses_privileged_simulation_data: true
