@@ -290,6 +290,7 @@ void ASimHUD::setBridgeStatus(const FText& status, const FLinearColor& color)
 }
 
 void ASimHUD::prepareSingleTest(
+    const FString& experiment,
     const FString& lidar_profile,
     const FString& depth_profile)
 {
@@ -318,7 +319,8 @@ void ASimHUD::prepareSingleTest(
     }
 
     const FString arguments = FString::Printf(
-        TEXT("--lidar %s --depth-camera %s"),
+        TEXT("--experiment %s --lidar %s --depth-camera %s"),
+        *experiment,
         *lidar_profile,
         *depth_profile);
 

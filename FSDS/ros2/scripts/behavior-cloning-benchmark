@@ -12,7 +12,7 @@ model_directory="${1:-$workspace_root/generated/behavior_cloning/models/rgbd}"
 maximum_throttle="${2:-0.20}"
 model_path="$model_directory/model.onnx"
 metadata_path="$model_directory/model.json"
-manifest_path="$workspace_root/generated/behavior_cloning/hp60c_benchmark/manifest.json"
+manifest_path="${3:-$workspace_root/generated/behavior_cloning/hp60c_benchmark/manifest.json}"
 results_directory="$workspace_root/results/behavior_cloning/${model_directory:t}"
 
 for required_file in "$model_path" "$metadata_path" "$manifest_path"; do

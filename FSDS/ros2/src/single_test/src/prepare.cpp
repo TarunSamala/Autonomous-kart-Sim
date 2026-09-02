@@ -242,6 +242,15 @@ int main(int argc, char ** argv)
       {"artifacts", {
           {"map", test.map_file.empty() ? json(nullptr) : json(test.map_file)},
           {"route", test.route_file.empty() ? json(nullptr) : json(test.route_file)}}},
+      {"research", {
+          {"family", test.experiment_family},
+          {"protocol", test.protocol},
+          {"reference", test.reference.empty() ? json(nullptr) : json(test.reference)},
+          {"hypothesis", test.hypothesis.empty() ? json(nullptr) : json(test.hypothesis)},
+          {"independent_variables", test.independent_variables},
+          {"dependent_metrics", test.dependent_metrics},
+          {"random_seed", test.random_seed},
+          {"uses_privileged_simulation_data", test.uses_privileged_simulation_data}}},
       {"excluded", test.operation == "manual" ?
         json::array({"autonomy", "navigation"}) : json::array({"navigation"})},
       {"source", {

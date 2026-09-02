@@ -71,10 +71,42 @@ TEST(SingleTestConfig, AcceptsAutonomyOperationWithAlgorithms)
 test: {id: autonomy, track: TrainingMap, operation: autonomy}
 sensors: {lidar: a3m1, depth_camera: off}
 algorithms: {odometry: sensor_odometry, slam: slam_toolbox, planner: recorded_route, controller: pure_pursuit}
+research: {family: slam, protocol: closed_loop_lap, dependent_metrics: [lap_time_s]}
 )"));
   EXPECT_EQ(test.operation, "autonomy");
   EXPECT_EQ(test.slam_algorithm, "slam_toolbox");
   EXPECT_EQ(test.controller_algorithm, "pure_pursuit");
+}
+
+TEST(SingleTestConfig, ParsesResearchProtocol)
+{
+  const auto test = single_test::parse_test_config(YAML::Load(R"(
+test: {id: amz_research, track: TrainingMap, operation: autonomy}
+sensors: {lidar: a3m1, depth_camera: off}
+algorithms: {planner: delaunay_beam_search, controller: pure_pursuit}
+research:
+  family: amz_style
+  protocol: closed_loop_lap
+  reference: "AMZ Driverless: The Full Autonomous Racing System"
+  hypothesis: "Local cone planning completes one clean lap."
+  independent_variables: [lidar_profile, target_speed]
+  dependent_metrics: [lap_time_s, cone_contacts]
+  random_seed: 42
+)"));
+  EXPECT_EQ(test.experiment_family, "amz_style");
+  EXPECT_EQ(test.random_seed, 42);
+  ASSERT_EQ(test.dependent_metrics.size(), 2U);
+  EXPECT_FALSE(test.uses_privileged_simulation_data);
+}
+
+TEST(SingleTestConfig, RejectsAutonomyWithoutResearchMetrics)
+{
+  EXPECT_THROW(single_test::parse_test_config(YAML::Load(R"(
+test: {id: missing_metrics, track: TrainingMap, operation: autonomy}
+sensors: {lidar: a3m1, depth_camera: off}
+algorithms: {planner: delaunay_beam_search, controller: pure_pursuit}
+research: {family: amz_style}
+)")), std::invalid_argument);
 }
 
 TEST(SingleTestConfig, RejectsUnknownOperation)

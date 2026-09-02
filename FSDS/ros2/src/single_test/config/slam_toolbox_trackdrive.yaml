@@ -21,3 +21,13 @@ algorithms:
 artifacts:
   map: generated/maps/TrainingMap/track_sensor
   route: generated/maps/TrainingMap/route_sensor_slam.json
+
+research:
+  family: slam
+  protocol: map_localize_drive
+  reference: "SLAM Toolbox: SLAM for the dynamic world"
+  hypothesis: "A saved pose graph and sensor-derived route can localize and complete one cone-free lap."
+  independent_variables: [lidar_profile, localization_backend, target_speed]
+  dependent_metrics: [completion, lap_time_s, cone_contacts, distance_m, localization_failures]
+  random_seed: 0
+  uses_privileged_simulation_data: false
