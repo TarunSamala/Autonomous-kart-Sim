@@ -1,0 +1,151 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+experiment="${1:-amz_style}"
+auto_arm=false
+if [[ "${2:-}" == "--auto-arm" ]]; then
+  auto_arm=true
+elif [[ -n "${2:-}" ]]; then
+  print -u2 "usage: single-test-launch [amz_style|behavior_cloning|slam|general_autonomy] [--auto-arm]"
+  exit 2
+fi
+
+case "$experiment" in
+  amz_style|behavior_cloning|slam|general_autonomy) ;;
+  *)
+    print -u2 "single-test-launch: unknown experiment: $experiment"
+    exit 2
+    ;;
+esac
+
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
+source /opt/ros/humble/setup.zsh
+if [[ ! -f "$workspace_root/install/setup.zsh" ]]; then
+  print -u2 "single-test-launch: workspace is not built"
+  print -u2 "Run: colcon build --symlink-install --packages-up-to single_test behavior_cloning"
+  exit 1
+fi
+source "$workspace_root/install/setup.zsh"
+
+manifest="$workspace_root/generated/single_test/$experiment/manifest.json"
+if [[ ! -f "$manifest" ]]; then
+  print -u2 "single-test-launch: experiment is not prepared: $manifest"
+  print -u2 "Before FSDS starts, run:"
+  print -u2 "  $workspace_root/scripts/single-test-prepare --experiment $experiment"
+  exit 1
+fi
+if ! nc -z -w 1 127.0.0.1 41451 >/dev/null 2>&1; then
+  print -u2 "single-test-launch: FSDS RPC is not reachable on 127.0.0.1:41451"
+  print -u2 "Start FSDS with the repository-local settings, then retry."
+  exit 1
+fi
+
+bridge_pid=0
+stack_pid=0
+owns_bridge=false
+
+cleanup()
+{
+  trap - INT TERM EXIT
+  # Always request a safe disabled state. This also covers interruption in the
+  # narrow interval between controller enable and recorder start.
+  "$workspace_root/scripts/single-test-disarm" >/dev/null 2>&1 || true
+  if (( stack_pid > 0 )) && kill -0 "$stack_pid" 2>/dev/null; then
+    kill -INT "$stack_pid" 2>/dev/null || true
+    wait "$stack_pid" 2>/dev/null || true
+  fi
+  if $owns_bridge && (( bridge_pid > 0 )) && kill -0 "$bridge_pid" 2>/dev/null; then
+    kill -INT "$bridge_pid" 2>/dev/null || true
+    wait "$bridge_pid" 2>/dev/null || true
+  fi
+}
+trap cleanup INT TERM EXIT
+
+if ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; then
+  print "[1/3] ROS bridge already connected"
+else
+  print "[1/3] Starting ROS bridge"
+  "$workspace_root/scripts/single-test-bridge" &
+  bridge_pid=$!
+  owns_bridge=true
+fi
+
+bridge_ready=false
+for _ in {1..40}; do
+  if ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; then
+    bridge_ready=true
+    break
+  fi
+  if $owns_bridge && ! kill -0 "$bridge_pid" 2>/dev/null; then
+    break
+  fi
+  sleep 0.5
+done
+if ! $bridge_ready; then
+  print -u2 "single-test-launch: bridge did not become ready within 20 seconds"
+  exit 1
+fi
+
+print "[2/3] Starting $experiment stack (controller remains disabled)"
+"$workspace_root/scripts/single-test-run" "$experiment" &
+stack_pid=$!
+
+services_ready=false
+controller_service=/autonomy/enable
+if [[ "$experiment" == "behavior_cloning" ]]; then
+  controller_service=/behavior_cloning/enable
+fi
+for _ in {1..60}; do
+  if ! kill -0 "$stack_pid" 2>/dev/null; then
+    break
+  fi
+  if ros2 service type /single_test/start >/dev/null 2>&1 &&
+     ros2 service type "$controller_service" >/dev/null 2>&1; then
+    services_ready=true
+    break
+  fi
+  sleep 0.5
+done
+if ! $services_ready; then
+  print -u2 "single-test-launch: experiment services did not become ready within 30 seconds"
+  exit 1
+fi
+
+print "[3/3] READY — inspect FSDS/RViz now; the vehicle is not moving"
+if ! $auto_arm; then
+  print -n "Press ENTER to arm and start timing, or Ctrl+C to abort: "
+  read -r
+fi
+"$workspace_root/scripts/single-test-arm" "$experiment"
+print "ARMED — the vehicle may move now. Ctrl+C disarms and cleans up."
+
+last_status=""
+while kill -0 "$stack_pid" 2>/dev/null; do
+  status_output="$(timeout 2 ros2 topic echo /single_test/status \
+    --once --qos-reliability reliable --qos-durability transient_local 2>/dev/null || true)"
+  status="$(print -r -- "$status_output" | awk -F': ' '/^data:/ {gsub(/\047/, "", $2); print $2; exit}')"
+  if [[ -n "$status" && "$status" != "$last_status" ]]; then
+    print "Test status: $status"
+    last_status="$status"
+  fi
+  if [[ "$status" == "COMPLETE" || "$status" == "FAILED" ]]; then
+    break
+  fi
+  sleep 1
+done
+
+if [[ "$last_status" == "COMPLETE" ]]; then
+  print "Test complete. Result JSON is under: $workspace_root/results/$experiment"
+elif [[ "$last_status" == "FAILED" ]]; then
+  print -u2 "Test failed; inspect the launch output above."
+else
+  print -u2 "Experiment stack exited before producing a terminal status."
+fi

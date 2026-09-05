@@ -23,6 +23,10 @@ if (( $# > 0 )) && [[ "$1" != --* ]]; then
   test_config="$1"
   shift
 fi
+if (( $# > 0 )) && [[ "$1" != --* ]]; then
+  output_root="$1"
+  shift
+fi
 
 typeset -a prepare_arguments
 while (( $# > 0 )); do
@@ -67,10 +71,6 @@ if [[ -n "$experiment" ]]; then
       ;;
   esac
   output_root="$workspace_root/generated/single_test/$experiment"
-fi
-if (( $# > 0 )) && [[ "$1" != --* ]]; then
-  output_root="$1"
-  shift
 fi
 
 output_settings="$output_root/settings.json"

@@ -147,8 +147,8 @@ private:
     running_ = true;
     started_at_ = SteadyClock::now();
     last_speed_at_.reset();
+    last_speed_mps_.reset();
     distance_m_ = 0.0;
-    speed_sum_ = 0.0;
     max_speed_mps_ = 0.0;
     speed_samples_ = 0;
     down_or_out_cones_ = 0;
@@ -170,11 +170,12 @@ private:
     if (last_speed_at_) {
       const double delta = std::chrono::duration<double>(current - *last_speed_at_).count();
       if (delta >= 0.0 && delta <= 1.0) {
-        distance_m_ += speed * delta;
+        const double previous_speed = last_speed_mps_.value_or(speed);
+        distance_m_ += 0.5 * (previous_speed + speed) * delta;
       }
     }
     last_speed_at_ = current;
-    speed_sum_ += speed;
+    last_speed_mps_ = speed;
     max_speed_mps_ = std::max(max_speed_mps_, speed);
     ++speed_samples_;
   }
@@ -226,7 +227,7 @@ private:
     const double duration_s = elapsed_s();
     running_ = false;
     set_status("WRITING_RESULT");
-    const double average_speed = speed_samples_ > 0 ? speed_sum_ / speed_samples_ : 0.0;
+    const double average_speed = duration_s > 0.0 ? distance_m_ / duration_s : 0.0;
     const auto unix_seconds = std::chrono::duration_cast<std::chrono::seconds>(
       std::chrono::system_clock::now().time_since_epoch()).count();
     const fs::path result_path = fs::absolute(results_directory_) /
@@ -240,6 +241,7 @@ private:
       {"duration_s", duration_s},
       {"distance_m", distance_m_},
       {"average_speed_mps", average_speed},
+      {"average_speed_method", "integrated_distance_over_duration"},
       {"max_speed_mps", max_speed_mps_},
       {"speed_samples", speed_samples_},
       {"down_or_out_cones", down_or_out_cones_},
@@ -273,8 +275,8 @@ private:
   bool running_{false};
   SteadyClock::time_point started_at_{};
   std::optional<SteadyClock::time_point> last_speed_at_;
+  std::optional<double> last_speed_mps_;
   double distance_m_{0.0};
-  double speed_sum_{0.0};
   double max_speed_mps_{0.0};
   std::size_t speed_samples_{0};
   uint32_t down_or_out_cones_{0};
