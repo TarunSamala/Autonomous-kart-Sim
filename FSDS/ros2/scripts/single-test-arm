@@ -31,5 +31,20 @@ if ! ros2 service type /autonomy/enable >/dev/null 2>&1; then
   exit 1
 fi
 
-ros2 service call /single_test/start std_srvs/srv/Trigger '{}'
-ros2 service call /autonomy/enable std_srvs/srv/SetBool '{data: true}'
+enable_response="$(ros2 service call \
+  /autonomy/enable std_srvs/srv/SetBool '{data: true}')"
+print -r -- "$enable_response"
+if [[ "$enable_response" != *"success=True"* &&
+      "$enable_response" != *"success: true"* ]]; then
+  print -u2 "single-test-arm: autonomy controller refused to arm"
+  exit 1
+fi
+
+start_response="$(ros2 service call /single_test/start std_srvs/srv/Trigger '{}')"
+print -r -- "$start_response"
+if [[ "$start_response" != *"success=True"* &&
+      "$start_response" != *"success: true"* ]]; then
+  print -u2 "single-test-arm: result recorder refused to start; disarming controller"
+  ros2 service call /autonomy/enable std_srvs/srv/SetBool '{data: false}' || true
+  exit 1
+fi

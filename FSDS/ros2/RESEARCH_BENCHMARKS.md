@@ -17,10 +17,15 @@ deployable autonomy result or compare it without that qualification.
 
 ## Reproducible sequence
 
+The shortest workflow uses the repository-local `single-test` command. It
+enters Distrobox automatically, starts the bridge and experiment stack in one
+terminal, waits for readiness, and asks for confirmation immediately before
+the vehicle can move.
+
 From the repository root, before launching FSDS:
 
 ```zsh
-FSDS/ros2/scripts/single-test-prepare --experiment amz_style
+FSDS/ros2/scripts/single-test prepare amz_style
 ```
 
 Valid values are `amz_style`, `behavior_cloning`, `slam`, and
@@ -29,22 +34,23 @@ settings file and research manifest under
 `FSDS/ros2/generated/single_test/<experiment>/`, and applies the settings to
 the repository-local `FSDS/settings.json`. Restart FSDS after preparation.
 
-After FSDS and the ROS bridge are running:
+After FSDS is running:
 
 ```zsh
-FSDS/ros2/scripts/single-test-run amz_style
+FSDS/ros2/scripts/single-test launch amz_style
 ```
 
-Inspect visualization and status before moving. In another terminal:
+The launcher starts the bridge when needed, starts the selected stack disabled,
+and waits until its services exist. Inspect FSDS/RViz when it prints `READY`,
+then press Enter in that same terminal to arm and begin timing. `Ctrl+C`
+disarms and cleans up processes owned by the launcher.
+
+Useful checks and manual controls are still available:
 
 ```zsh
-FSDS/ros2/scripts/single-test-arm amz_style
-```
-
-Emergency/manual stop:
-
-```zsh
-FSDS/ros2/scripts/single-test-disarm
+FSDS/ros2/scripts/single-test check
+FSDS/ros2/scripts/single-test arm amz_style
+FSDS/ros2/scripts/single-test stop
 ```
 
 Behavior cloning additionally requires a validated model at
