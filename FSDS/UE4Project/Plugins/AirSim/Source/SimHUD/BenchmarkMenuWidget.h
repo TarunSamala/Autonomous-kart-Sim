@@ -17,14 +17,16 @@ struct FBenchmarkProfileOption
     FBenchmarkProfileOption(
         const TCHAR* InId,
         const TCHAR* InLabel,
-        const TCHAR* InDescription)
-        : Id(InId), Label(InLabel), Description(InDescription)
+        const TCHAR* InDescription,
+        const TCHAR* InTag = TEXT(""))
+        : Id(InId), Label(InLabel), Description(InDescription), Tag(InTag)
     {
     }
 
     FString Id;
     FString Label;
     FString Description;
+    FString Tag;
 };
 
 class SBenchmarkMenu : public SCompoundWidget
@@ -48,6 +50,8 @@ private:
     TSharedRef<SWidget> BuildSidebar();
     TSharedRef<SWidget> BuildConfigurationPanel();
     TSharedRef<SWidget> BuildSummaryPanel();
+    TSharedRef<SWidget> BuildExperimentGrid();
+    TSharedRef<SWidget> BuildExperimentCard(FProfileOptionPtr Option);
     TSharedRef<SWidget> BuildSensorSelector(
         const FText& Eyebrow,
         const FText& Title,
@@ -70,6 +74,9 @@ private:
     FText GetSelectedLidarLabel() const;
     FText GetSelectedDepthLabel() const;
     FText GetExperimentDescription() const;
+    FText GetExperimentCardState(FProfileOptionPtr Option) const;
+    FSlateColor GetExperimentCardStateColor(FProfileOptionPtr Option) const;
+    FSlateColor GetExperimentCardBorderColor(FProfileOptionPtr Option) const;
     FText GetLidarDescription() const;
     FText GetDepthDescription() const;
     FText GetConfigurationState() const;
@@ -78,6 +85,7 @@ private:
 
     FReply HandleConnectBridge();
     FReply HandlePrepareBenchmark();
+    FReply HandleExperimentCardClicked(FProfileOptionPtr Option);
     FReply HandleClose();
 
 private:
