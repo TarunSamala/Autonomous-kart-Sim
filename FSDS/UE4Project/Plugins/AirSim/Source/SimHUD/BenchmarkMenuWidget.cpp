@@ -43,16 +43,20 @@ void SBenchmarkMenu::Construct(const FArguments& InArgs)
     ExperimentOptions = {
         MakeShared<FBenchmarkProfileOption>(
             TEXT("amz_style"), TEXT("AMZ-Style Cone Planning"),
-            TEXT("LiDAR cones / Delaunay beam search / Pure Pursuit / no prior map")),
+            TEXT("LiDAR cones · Delaunay planner · Pure Pursuit"),
+            TEXT("MAPLESS")),
         MakeShared<FBenchmarkProfileOption>(
             TEXT("behavior_cloning"), TEXT("Behavior Cloning"),
-            TEXT("Held-out RGB-D policy / C++ OpenCV inference / closed-loop safety")),
+            TEXT("RGB-D policy · C++ inference · safety limits"),
+            TEXT("LEARNED")),
         MakeShared<FBenchmarkProfileOption>(
             TEXT("slam"), TEXT("SLAM Toolbox Track Drive"),
-            TEXT("Sensor odometry / saved pose graph / recorded route / Pure Pursuit")),
+            TEXT("Pose graph · recorded route · Pure Pursuit"),
+            TEXT("MAPPED")),
         MakeShared<FBenchmarkProfileOption>(
             TEXT("general_autonomy"), TEXT("General Autonomy Baseline"),
-            TEXT("FSDS oracle track and odometry / controller-isolation benchmark"))
+            TEXT("FSDS oracle · controller-isolation reference"),
+            TEXT("ORACLE"))
     };
 
     LidarOptions = {
@@ -294,35 +298,6 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                 ]
                 + SVerticalBox::Slot()
                 .AutoHeight()
-                .Padding(0.0f, 8.0f, 0.0f, 0.0f)
-                [
-                    SNew(SBorder)
-                    .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(FLinearColor::Transparent)
-                    .Padding(FMargin(13.0f, 13.0f))
-                    [
-                        SNew(SVerticalBox)
-                        + SVerticalBox::Slot()
-                        .AutoHeight()
-                        [
-                            SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("02    MULTI TEST")))
-                            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
-                            .ColorAndOpacity(BenchmarkTheme::TextMuted)
-                        ]
-                        + SVerticalBox::Slot()
-                        .AutoHeight()
-                        .Padding(27.0f, 4.0f, 0.0f, 0.0f)
-                        [
-                            SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("Planned / competitive benchmark")))
-                            .Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
-                            .ColorAndOpacity(BenchmarkTheme::TextMuted)
-                        ]
-                    ]
-                ]
-                + SVerticalBox::Slot()
-                .AutoHeight()
                 .Padding(8.0f, 28.0f, 0.0f, 12.0f)
                 [
                     SNew(STextBlock)
@@ -437,13 +412,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 .AutoHeight()
                 .Padding(0.0f, 14.0f, 0.0f, 0.0f)
                 [
-                    BuildSensorSelector(
-                        FText::FromString(TEXT("EXPERIMENT FAMILY")),
-                        FText::FromString(TEXT("Autonomy Method")),
-                        FText::FromString(TEXT("Executable benchmark profile")),
-                        &ExperimentOptions,
-                        &SelectedExperiment,
-                        &ExperimentComboBox)
+                    BuildExperimentGrid()
                 ]
                 + SVerticalBox::Slot()
                 .AutoHeight()
@@ -542,6 +511,14 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                         + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 3.0f)
                         [
                             SNew(STextBlock)
+                            .Text(this, &SBenchmarkMenu::GetExperimentDescription)
+                            .Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
+                            .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                            .AutoWrapText(true)
+                        ]
+                        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 12.0f, 0.0f, 3.0f)
+                        [
+                            SNew(STextBlock)
                             .Text(this, &SBenchmarkMenu::GetSelectedLidarLabel)
                             .Font(FCoreStyle::GetDefaultFontStyle("Regular", 12))
                             .ColorAndOpacity(BenchmarkTheme::Text)
@@ -633,6 +610,121 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
         ];
 }
 
+TSharedRef<SWidget> SBenchmarkMenu::BuildExperimentGrid()
+{
+    return SNew(SVerticalBox)
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        .Padding(2.0f, 0.0f, 0.0f, 9.0f)
+        [
+            SNew(STextBlock)
+            .Text(FText::FromString(TEXT("AUTONOMY PROFILE")))
+            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+            .ColorAndOpacity(BenchmarkTheme::TextMuted)
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(0.0f, 0.0f, 6.0f, 6.0f)
+            [
+                BuildExperimentCard(ExperimentOptions[0])
+            ]
+            + SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(6.0f, 0.0f, 0.0f, 6.0f)
+            [
+                BuildExperimentCard(ExperimentOptions[1])
+            ]
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(0.0f, 6.0f, 6.0f, 0.0f)
+            [
+                BuildExperimentCard(ExperimentOptions[2])
+            ]
+            + SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(6.0f, 6.0f, 0.0f, 0.0f)
+            [
+                BuildExperimentCard(ExperimentOptions[3])
+            ]
+        ];
+}
+
+TSharedRef<SWidget> SBenchmarkMenu::BuildExperimentCard(FProfileOptionPtr Option)
+{
+    return SNew(SBox)
+        .HeightOverride(112.0f)
+        [
+            SNew(SBorder)
+            .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(
+                this,
+                &SBenchmarkMenu::GetExperimentCardBorderColor,
+                Option)
+            .Padding(1.0f)
+            [
+                SNew(SButton)
+                .ButtonStyle(&SecondaryButtonStyle)
+                .ContentPadding(FMargin(16.0f, 13.0f))
+                .ToolTipText(FText::FromString(Option->Description))
+                .OnClicked(this, &SBenchmarkMenu::HandleExperimentCardClicked, Option)
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot()
+                    .AutoHeight()
+                    [
+                        SNew(SHorizontalBox)
+                        + SHorizontalBox::Slot()
+                        .FillWidth(1.0f)
+                        [
+                            SNew(STextBlock)
+                            .Text(FText::FromString(Option->Tag))
+                            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
+                            .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                        ]
+                        + SHorizontalBox::Slot()
+                        .AutoWidth()
+                        [
+                            SNew(STextBlock)
+                            .Text(this, &SBenchmarkMenu::GetExperimentCardState, Option)
+                            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
+                            .ColorAndOpacity(
+                                this,
+                                &SBenchmarkMenu::GetExperimentCardStateColor,
+                                Option)
+                        ]
+                    ]
+                    + SVerticalBox::Slot()
+                    .AutoHeight()
+                    .Padding(0.0f, 8.0f, 0.0f, 4.0f)
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromString(Option->Label))
+                        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+                        .ColorAndOpacity(BenchmarkTheme::Text)
+                    ]
+                    + SVerticalBox::Slot()
+                    .AutoHeight()
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromString(Option->Description))
+                        .Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
+                        .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                        .AutoWrapText(true)
+                    ]
+                ]
+            ]
+        ];
+}
+
 TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
     const FText& Eyebrow,
     const FText& Title,
@@ -641,7 +733,6 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
     FProfileOptionPtr* Selected,
     TSharedPtr<SComboBox<FProfileOptionPtr>>* ComboBox)
 {
-    const bool IsExperiment = Options == &ExperimentOptions;
     const bool IsLidar = Options == &LidarOptions;
 
     return SNew(SBorder)
@@ -691,15 +782,11 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
                     .OnGenerateWidget(this, &SBenchmarkMenu::GenerateProfileOption)
                     .OnSelectionChanged(
                         this,
-                        IsExperiment ? &SBenchmarkMenu::SelectExperiment :
-                        (IsLidar ? &SBenchmarkMenu::SelectLidar : &SBenchmarkMenu::SelectDepth))
+                        IsLidar ? &SBenchmarkMenu::SelectLidar : &SBenchmarkMenu::SelectDepth)
                     .ContentPadding(FMargin(14.0f, 9.0f))
                     [
                         SNew(STextBlock)
-                        .Text(IsExperiment
-                            ? TAttribute<FText>::Create(
-                                TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedExperimentLabel))
-                            : IsLidar
+                        .Text(IsLidar
                             ? TAttribute<FText>::Create(
                                 TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedLidarLabel))
                             : TAttribute<FText>::Create(
@@ -711,10 +798,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
                 + SVerticalBox::Slot().AutoHeight().Padding(2.0f, 9.0f, 0.0f, 0.0f)
                 [
                     SNew(STextBlock)
-                    .Text(IsExperiment
-                        ? TAttribute<FText>::Create(
-                            TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetExperimentDescription))
-                        : IsLidar
+                    .Text(IsLidar
                         ? TAttribute<FText>::Create(
                             TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetLidarDescription))
                         : TAttribute<FText>::Create(
@@ -880,11 +964,52 @@ FText SBenchmarkMenu::GetExperimentDescription() const
         SelectedExperiment.IsValid() ? SelectedExperiment->Description : TEXT(""));
 }
 
+FText SBenchmarkMenu::GetExperimentCardState(FProfileOptionPtr Option) const
+{
+    return Option.IsValid() && Option == SelectedExperiment
+        ? FText::FromString(TEXT("SELECTED"))
+        : FText::FromString(TEXT("SELECT"));
+}
+
+FSlateColor SBenchmarkMenu::GetExperimentCardStateColor(FProfileOptionPtr Option) const
+{
+    return FSlateColor(
+        Option.IsValid() && Option == SelectedExperiment
+            ? BenchmarkTheme::Accent
+            : BenchmarkTheme::TextMuted);
+}
+
+FSlateColor SBenchmarkMenu::GetExperimentCardBorderColor(FProfileOptionPtr Option) const
+{
+    return FSlateColor(
+        Option.IsValid() && Option == SelectedExperiment
+            ? BenchmarkTheme::Accent
+            : BenchmarkTheme::Border);
+}
+
 FText SBenchmarkMenu::GetConfigurationState() const
 {
-    return CanPrepare()
-        ? FText::FromString(TEXT("VALID SENSOR CONTRACT"))
-        : FText::FromString(TEXT("SELECT AT LEAST ONE SENSOR"));
+    if (!SelectedExperiment.IsValid())
+    {
+        return FText::FromString(TEXT("SELECT AN AUTONOMY PROFILE"));
+    }
+    if (!SelectedLidar.IsValid() || !SelectedDepth.IsValid() ||
+        (SelectedLidar->Id == TEXT("off") && SelectedDepth->Id == TEXT("off")))
+    {
+        return FText::FromString(TEXT("SELECT AT LEAST ONE SENSOR"));
+    }
+    if (SelectedExperiment->Id == TEXT("behavior_cloning") &&
+        SelectedDepth->Id == TEXT("off"))
+    {
+        return FText::FromString(TEXT("BEHAVIOR CLONING REQUIRES RGB-D"));
+    }
+    if ((SelectedExperiment->Id == TEXT("amz_style") ||
+         SelectedExperiment->Id == TEXT("slam")) &&
+        SelectedLidar->Id == TEXT("off"))
+    {
+        return FText::FromString(TEXT("THIS PROFILE REQUIRES LIDAR"));
+    }
+    return FText::FromString(TEXT("READY TO PREPARE"));
 }
 
 FSlateColor SBenchmarkMenu::GetConfigurationStateColor() const
@@ -915,6 +1040,12 @@ bool SBenchmarkMenu::CanPrepare() const
 FReply SBenchmarkMenu::HandleConnectBridge()
 {
     OnConnectBridge.ExecuteIfBound();
+    return FReply::Handled();
+}
+
+FReply SBenchmarkMenu::HandleExperimentCardClicked(FProfileOptionPtr Option)
+{
+    SelectExperiment(Option, ESelectInfo::Direct);
     return FReply::Handled();
 }
 
