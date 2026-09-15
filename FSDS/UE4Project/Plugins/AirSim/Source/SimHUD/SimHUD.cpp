@@ -201,7 +201,7 @@ FReply ASimHUD::connectRosBridge()
     {
         setBridgeStatus(
             FText::FromString(TEXT("RUNNING")),
-            FLinearColor(0.2f, 0.9f, 0.35f));
+            FLinearColor(0.84f, 0.83f, 0.79f));
         return FReply::Handled();
     }
 
@@ -210,7 +210,7 @@ FReply ASimHUD::connectRosBridge()
     {
         setBridgeStatus(
             FText::FromString(TEXT("START SCRIPT NOT FOUND")),
-            FLinearColor(1.0f, 0.2f, 0.15f));
+            FLinearColor(0.96f, 0.45f, 0.14f));
         UAirBlueprintLib::LogMessage(
             TEXT("Set FSDS_BRIDGE_START_SCRIPT to the absolute bridge-start path"),
             TEXT(""),
@@ -220,7 +220,7 @@ FReply ASimHUD::connectRosBridge()
 
     setBridgeStatus(
         FText::FromString(TEXT("STARTING...")),
-        FLinearColor(0.95f, 0.65f, 0.1f));
+        FLinearColor(0.82f, 0.35f, 0.08f));
 
     uint32 process_id = 0;
     bridge_process_ = FPlatformProcess::CreateProc(
@@ -238,7 +238,7 @@ FReply ASimHUD::connectRosBridge()
     {
         setBridgeStatus(
             FText::FromString(TEXT("FAILED TO START")),
-            FLinearColor(1.0f, 0.2f, 0.15f));
+            FLinearColor(0.96f, 0.45f, 0.14f));
         return FReply::Handled();
     }
 
@@ -291,7 +291,7 @@ void ASimHUD::updateBridgeProcessState()
         bridge_process_was_running_ = true;
         setBridgeStatus(
             FText::FromString(TEXT("RUNNING")),
-            FLinearColor(0.2f, 0.9f, 0.35f));
+            FLinearColor(0.84f, 0.83f, 0.79f));
         return;
     }
 
@@ -305,7 +305,7 @@ void ASimHUD::updateBridgeProcessState()
             : FString(TEXT("STOPPED"));
         setBridgeStatus(
             FText::FromString(status),
-            FLinearColor(1.0f, 0.2f, 0.15f));
+            FLinearColor(0.96f, 0.45f, 0.14f));
         bridge_process_was_running_ = false;
     }
 
@@ -327,7 +327,7 @@ void ASimHUD::toggleManualDrive()
     {
         setManualDriveStatus(
             FText::FromString(TEXT("STOPPING / BRAKE COMMAND SENT")),
-            FLinearColor(1.0f, 0.68f, 0.18f),
+            FLinearColor(0.82f, 0.35f, 0.08f),
             true);
         manual_drive_stop_requested_ = true;
         FPlatformProcess::TerminateProc(manual_drive_process_, true);
@@ -345,14 +345,14 @@ void ASimHUD::toggleManualDrive()
     {
         setManualDriveStatus(
             FText::FromString(TEXT("TELEOP SCRIPT NOT FOUND")),
-            FLinearColor(1.0f, 0.28f, 0.28f),
+            FLinearColor(0.96f, 0.45f, 0.14f),
             false);
         return;
     }
 
     setManualDriveStatus(
         FText::FromString(TEXT("STARTING...")),
-        FLinearColor(1.0f, 0.68f, 0.18f),
+        FLinearColor(0.82f, 0.35f, 0.08f),
         false);
     manual_drive_stop_requested_ = false;
 
@@ -372,7 +372,7 @@ void ASimHUD::toggleManualDrive()
     {
         setManualDriveStatus(
             FText::FromString(TEXT("FAILED TO START")),
-            FLinearColor(1.0f, 0.28f, 0.28f),
+            FLinearColor(0.96f, 0.45f, 0.14f),
             false);
         return;
     }
@@ -421,7 +421,7 @@ void ASimHUD::updateManualDriveProcessState()
         manual_drive_process_was_running_ = true;
         setManualDriveStatus(
             FText::FromString(TEXT("RUNNING / PRESS E TO ARM")),
-            FLinearColor(0.22f, 0.91f, 0.55f),
+            FLinearColor(0.84f, 0.83f, 0.79f),
             true);
         return;
     }
@@ -438,8 +438,8 @@ void ASimHUD::updateManualDriveProcessState()
                 ? FText::FromString(TEXT("STOPPED / VEHICLE BRAKED"))
                 : FText::FromString(TEXT("STOPPED / CHECK ROS LOG")),
             clean_exit
-                ? FLinearColor(0.52f, 0.55f, 0.55f)
-                : FLinearColor(1.0f, 0.28f, 0.28f),
+                ? FLinearColor(0.55f, 0.54f, 0.51f)
+                : FLinearColor(0.96f, 0.45f, 0.14f),
             false);
         manual_drive_process_was_running_ = false;
         manual_drive_stop_requested_ = false;
@@ -476,7 +476,7 @@ void ASimHUD::prepareSingleTest(
         {
             benchmark_menu_->SetPreparationStatus(
                 FText::FromString(TEXT("PROFILE GENERATION ALREADY RUNNING")),
-                FLinearColor(1.0f, 0.68f, 0.18f));
+                FLinearColor(0.82f, 0.35f, 0.08f));
         }
         return;
     }
@@ -488,7 +488,7 @@ void ASimHUD::prepareSingleTest(
         {
             benchmark_menu_->SetPreparationStatus(
                 FText::FromString(TEXT("SINGLE TEST PREPARE SCRIPT NOT FOUND")),
-                FLinearColor(1.0f, 0.28f, 0.28f));
+                FLinearColor(0.96f, 0.45f, 0.14f));
         }
         return;
     }
@@ -517,7 +517,7 @@ void ASimHUD::prepareSingleTest(
         {
             benchmark_menu_->SetPreparationStatus(
                 FText::FromString(TEXT("FAILED TO START PROFILE GENERATOR")),
-                FLinearColor(1.0f, 0.28f, 0.28f));
+                FLinearColor(0.96f, 0.45f, 0.14f));
         }
         return;
     }
@@ -585,7 +585,7 @@ void ASimHUD::updatePreparationProcessState()
             {
                 benchmark_menu_->SetPreparationStatus(
                     FText::FromString(TEXT("PREPARATION TIMED OUT / CHECK DISTROBOX")),
-                    FLinearColor(1.0f, 0.28f, 0.28f));
+                    FLinearColor(0.96f, 0.45f, 0.14f));
             }
             return;
         }
@@ -595,7 +595,7 @@ void ASimHUD::updatePreparationProcessState()
         {
             benchmark_menu_->SetPreparationStatus(
                 FText::FromString(TEXT("GENERATING SETTINGS AND MANIFEST...")),
-                FLinearColor(1.0f, 0.68f, 0.18f));
+                FLinearColor(0.82f, 0.35f, 0.08f));
         }
         return;
     }
@@ -631,8 +631,8 @@ void ASimHUD::updatePreparationProcessState()
                     ? FText::FromString(TEXT("PROFILE READY / RESTART FSDS TO APPLY"))
                     : FText::FromString(TEXT("PROFILE GENERATION FAILED / CHECK LOG")),
                 succeeded
-                    ? FLinearColor(0.22f, 0.91f, 0.55f)
-                    : FLinearColor(1.0f, 0.28f, 0.28f));
+                    ? FLinearColor(0.84f, 0.83f, 0.79f)
+                    : FLinearColor(0.96f, 0.45f, 0.14f));
         }
         preparation_process_was_running_ = false;
     }

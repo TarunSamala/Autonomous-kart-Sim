@@ -19,19 +19,19 @@ namespace BenchmarkTheme
 // The simulator remains visible beneath a restrained, cinematic veil. The
 // translucency is deliberate: this is a benchmark tool running over a live
 // test environment, not a detached desktop settings window.
-const FLinearColor Backdrop(0.002f, 0.004f, 0.006f, 0.76f);
-const FLinearColor Surface(0.008f, 0.012f, 0.016f, 0.62f);
-const FLinearColor SurfaceRaised(0.035f, 0.043f, 0.048f, 0.72f);
-const FLinearColor SurfaceSoft(0.075f, 0.085f, 0.09f, 0.52f);
-const FLinearColor Border(0.55f, 0.59f, 0.60f, 0.28f);
-const FLinearColor Text(0.90f, 0.91f, 0.89f, 1.0f);
-const FLinearColor TextMuted(0.52f, 0.55f, 0.55f, 1.0f);
-const FLinearColor Accent(0.22f, 0.82f, 0.86f, 1.0f);
-const FLinearColor AccentHover(0.37f, 0.93f, 0.95f, 1.0f);
-const FLinearColor AccentPressed(0.12f, 0.67f, 0.72f, 1.0f);
-const FLinearColor Success(0.22f, 0.91f, 0.55f, 1.0f);
-const FLinearColor Warning(1.0f, 0.68f, 0.18f, 1.0f);
-const FLinearColor Danger(1.0f, 0.28f, 0.28f, 1.0f);
+const FLinearColor Backdrop(0.004f, 0.004f, 0.005f, 0.84f);
+const FLinearColor Surface(0.016f, 0.016f, 0.018f, 0.78f);
+const FLinearColor SurfaceRaised(0.050f, 0.050f, 0.055f, 0.88f);
+const FLinearColor SurfaceSoft(0.095f, 0.095f, 0.100f, 0.76f);
+const FLinearColor Border(0.70f, 0.68f, 0.64f, 0.24f);
+const FLinearColor Text(0.93f, 0.92f, 0.89f, 1.0f);
+const FLinearColor TextMuted(0.55f, 0.54f, 0.51f, 1.0f);
+const FLinearColor Accent(0.76f, 0.31f, 0.075f, 1.0f);
+const FLinearColor AccentHover(0.92f, 0.43f, 0.12f, 1.0f);
+const FLinearColor AccentPressed(0.58f, 0.20f, 0.040f, 1.0f);
+const FLinearColor Success(0.84f, 0.83f, 0.79f, 1.0f);
+const FLinearColor Warning(0.82f, 0.35f, 0.080f, 1.0f);
+const FLinearColor Danger(0.96f, 0.45f, 0.14f, 1.0f);
 }
 
 void SBenchmarkMenu::Construct(const FArguments& InArgs)
@@ -111,7 +111,7 @@ void SBenchmarkMenu::Construct(const FArguments& InArgs)
 
     SecondaryButtonStyle = FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button");
     SecondaryButtonStyle.SetNormal(FSlateColorBrush(BenchmarkTheme::SurfaceSoft));
-    SecondaryButtonStyle.SetHovered(FSlateColorBrush(FLinearColor(0.06f, 0.09f, 0.12f, 1.0f)));
+    SecondaryButtonStyle.SetHovered(FSlateColorBrush(FLinearColor(0.14f, 0.105f, 0.080f, 1.0f)));
     SecondaryButtonStyle.SetPressed(FSlateColorBrush(BenchmarkTheme::Border));
     SecondaryButtonStyle.SetNormalPadding(FMargin(16.0f, 10.0f));
     SecondaryButtonStyle.SetPressedPadding(FMargin(16.0f, 11.0f, 16.0f, 9.0f));
@@ -173,7 +173,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildHeader()
 {
     return SNew(SBorder)
         .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(FLinearColor(0.004f, 0.007f, 0.009f, 0.34f))
+        .BorderBackgroundColor(FLinearColor(0.012f, 0.012f, 0.014f, 0.56f))
         .Padding(FMargin(18.0f, 12.0f, 18.0f, 20.0f))
         [
             SNew(SHorizontalBox)
@@ -225,7 +225,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildHeader()
             [
                 SNew(SBorder)
                 .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                .BorderBackgroundColor(FLinearColor(0.04f, 0.12f, 0.13f, 0.68f))
+                .BorderBackgroundColor(FLinearColor(0.10f, 0.060f, 0.030f, 0.82f))
                 .Padding(FMargin(11.0f, 6.0f))
                 [
                     SNew(STextBlock)
@@ -260,7 +260,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
         [
             SNew(SBorder)
             .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.004f, 0.008f, 0.010f, 0.48f))
+            .BorderBackgroundColor(FLinearColor(0.012f, 0.012f, 0.014f, 0.72f))
             .Padding(FMargin(18.0f, 24.0f, 24.0f, 18.0f))
             [
                 SNew(SVerticalBox)
@@ -278,7 +278,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(FLinearColor(0.08f, 0.23f, 0.24f, 0.72f))
+                    .BorderBackgroundColor(FLinearColor(0.12f, 0.070f, 0.032f, 0.86f))
                     .Padding(FMargin(13.0f, 13.0f))
                     [
                         SNew(SVerticalBox)
@@ -343,7 +343,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
 {
     return SNew(SBorder)
         .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(FLinearColor(0.006f, 0.009f, 0.012f, 0.42f))
+        .BorderBackgroundColor(FLinearColor(0.010f, 0.010f, 0.012f, 0.64f))
         .Padding(FMargin(38.0f, 26.0f, 34.0f, 24.0f))
         [
             SNew(SScrollBox)
@@ -402,7 +402,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                         [
                             SNew(SBorder)
                             .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                            .BorderBackgroundColor(FLinearColor(0.04f, 0.12f, 0.13f, 0.58f))
+                            .BorderBackgroundColor(FLinearColor(0.095f, 0.060f, 0.034f, 0.72f))
                             .Padding(FMargin(10.0f, 6.0f))
                             [
                                 SNew(STextBlock)
@@ -449,7 +449,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildConfigurationPanel()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(FLinearColor(0.12f, 0.075f, 0.018f, 0.46f))
+                    .BorderBackgroundColor(FLinearColor(0.10f, 0.060f, 0.025f, 0.58f))
                     .Padding(FMargin(15.0f, 12.0f))
                     [
                         SNew(STextBlock)
@@ -470,7 +470,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
         [
             SNew(SBorder)
             .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.003f, 0.006f, 0.008f, 0.60f))
+            .BorderBackgroundColor(FLinearColor(0.010f, 0.010f, 0.012f, 0.78f))
             .Padding(FMargin(34.0f, 26.0f, 26.0f, 20.0f))
             [
                 SNew(SVerticalBox)
@@ -494,7 +494,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                 [
                     SNew(SBorder)
                     .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(FLinearColor(0.08f, 0.09f, 0.09f, 0.44f))
+                    .BorderBackgroundColor(FLinearColor(0.065f, 0.065f, 0.068f, 0.72f))
                     .Padding(FMargin(18.0f))
                     [
                         SNew(SVerticalBox)
@@ -629,7 +629,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                         SNew(STextBlock)
                         .Text(FText::FromString(TEXT("APPLY & PREPARE TEST")))
                         .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
-                        .ColorAndOpacity(FLinearColor(0.0f, 0.06f, 0.08f, 1.0f))
+                        .ColorAndOpacity(FLinearColor(0.035f, 0.020f, 0.010f, 1.0f))
                     ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
@@ -799,7 +799,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
 
     return SNew(SBorder)
         .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(FLinearColor(0.02f, 0.025f, 0.027f, 0.28f))
+        .BorderBackgroundColor(FLinearColor(0.035f, 0.035f, 0.038f, 0.52f))
         .Padding(FMargin(18.0f, 16.0f))
         [
             SNew(SHorizontalBox)
