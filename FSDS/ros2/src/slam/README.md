@@ -72,8 +72,15 @@ Decision nodes do not subscribe to `/fsds/testing_only/track` or
 `/fsds/testing_only/odom`. `/fsds/testing_only/extra_info` is consumed only as
 the benchmark/safety authority for lap completion and cone contact.
 
-For the integrated manual teach workflow, run `scripts/single-test prepare
-slam` before FSDS starts, then `scripts/single-test teach` after it starts.
-This records one manual lap and serializes both required artifacts. Afterwards,
-`scripts/single-test launch slam` runs Pure Pursuit and `scripts/single-test
-launch slam_stanley` runs Stanley against the same map and route.
+For the integrated AMZ-style workflow, run `scripts/single-test prepare
+amz_style` before FSDS starts, then `scripts/single-test teach-run --laps 1`
+after it starts. This records a manual lap, detects geometric return to the
+start in the loop-corrected `slam/map` frame, saves the SLAM graph and persistent
+cone map, builds an ordered Delaunay centreline, and safely transitions to
+localization plus autonomous replay. Use `--laps 2` when a second observation
+lap is needed for a cleaner landmark map.
+
+The geometric gate is deliberately stricter than merely entering the start
+radius: it also requires minimum travelled distance and heading agreement.
+This confirms a closed physical loop in the corrected map frame, but it is not
+a direct notification that SLAM Toolbox inserted a graph constraint.

@@ -40,13 +40,20 @@ public:
     minimum_route_points_ = declare_parameter<int>("minimum_route_points", 100);
     target_laps_ = declare_parameter<int>("target_laps", 1);
     auto_start_ = declare_parameter<bool>("auto_start", true);
+    use_fsds_lap_signal_ = declare_parameter<bool>("use_fsds_lap_signal", false);
+    closure_radius_m_ = declare_parameter<double>("closure_radius_m", 2.0);
+    minimum_loop_distance_m_ = declare_parameter<double>("minimum_loop_distance_m", 80.0);
+    closure_heading_tolerance_rad_ =
+      declare_parameter<double>("closure_heading_tolerance_rad", 0.80);
 
     if (global_frame_.empty() || base_frame_.empty() || output_path_.empty()) {
       throw std::invalid_argument("global_frame, base_frame and output_path must not be empty");
     }
     if (!std::isfinite(sample_distance_m_) || sample_distance_m_ <= 0.0 ||
       !std::isfinite(sample_period_s_) || sample_period_s_ <= 0.0 ||
-      minimum_route_points_ < 3 || target_laps_ < 0)
+      minimum_route_points_ < 3 || target_laps_ < 0 || closure_radius_m_ <= 0.0 ||
+      minimum_loop_distance_m_ <= 0.0 || closure_heading_tolerance_rad_ <= 0.0 ||
+      closure_heading_tolerance_rad_ > 3.14159265358979323846)
     {
       throw std::invalid_argument("invalid route recorder parameters");
     }
@@ -103,6 +110,23 @@ private:
       first.pose.position.y - second.pose.position.y);
   }
 
+  static double yaw(const geometry_msgs::msg::PoseStamped & pose)
+  {
+    const auto & orientation = pose.pose.orientation;
+    tf2::Quaternion quaternion(
+      orientation.x, orientation.y, orientation.z, orientation.w);
+    double roll = 0.0;
+    double pitch = 0.0;
+    double heading = 0.0;
+    tf2::Matrix3x3(quaternion).getRPY(roll, pitch, heading);
+    return heading;
+  }
+
+  static double angle_distance(const double first, const double second)
+  {
+    return std::abs(std::atan2(std::sin(first - second), std::cos(first - second)));
+  }
+
   std::optional<geometry_msgs::msg::PoseStamped> current_pose()
   {
     try {
@@ -136,6 +160,12 @@ private:
       return;
     }
     route_.header.stamp = pose.header.stamp;
+    if (route_.poses.empty()) {
+      start_pose_ = pose;
+      travelled_distance_m_ = 0.0;
+    } else {
+      travelled_distance_m_ += planar_distance(route_.poses.back(), pose);
+    }
     route_.poses.push_back(pose);
     route_pub_->publish(route_);
     RCLCPP_INFO_THROTTLE(
@@ -150,11 +180,56 @@ private:
     const auto pose = current_pose();
     if (pose) {
       append_pose(*pose, false);
+      check_geometric_loop_closure(*pose);
+    }
+  }
+
+  void check_geometric_loop_closure(const geometry_msgs::msg::PoseStamped & pose)
+  {
+    if (!recording_ || target_laps_ <= 0 || !start_pose_ ||
+      route_.poses.size() < static_cast<std::size_t>(minimum_route_points_) ||
+      travelled_distance_m_ < minimum_loop_distance_m_)
+    {
+      return;
+    }
+    const double closure_distance = planar_distance(*start_pose_, pose);
+    const double heading_error = angle_distance(yaw(*start_pose_), yaw(pose));
+    if (closure_distance > closure_radius_m_ ||
+      heading_error > closure_heading_tolerance_rad_)
+    {
+      return;
+    }
+
+    ++geometric_laps_completed_;
+    if (geometric_laps_completed_ < target_laps_) {
+      start_pose_ = pose;
+      travelled_distance_m_ = 0.0;
+      RCLCPP_INFO(
+        get_logger(), "Geometric loop %d/%d accepted; continuing teaching",
+        geometric_laps_completed_, target_laps_);
+      return;
+    }
+
+    recording_ = false;
+    try {
+      append_pose(pose, true);
+      save_route("geometric_loop_closure");
+      set_status("COMPLETE");
+      RCLCPP_INFO(
+        get_logger(),
+        "Geometric loop closure accepted after %.1f m (position error %.2f m, heading error %.2f rad)",
+        travelled_distance_m_, closure_distance, heading_error);
+    } catch (const std::exception & error) {
+      set_status("FAILED");
+      RCLCPP_ERROR(get_logger(), "Could not save loop-closed route: %s", error.what());
     }
   }
 
   void extra_info_callback(const fs_msgs::msg::ExtraInfo::SharedPtr message)
   {
+    if (!use_fsds_lap_signal_) {
+      return;
+    }
     const std::size_t lap_count = message->laps.size();
     if (!lap_count_at_start_) {
       lap_count_at_start_ = lap_count;
@@ -212,6 +287,9 @@ private:
   {
     route_.poses.clear();
     lap_count_at_start_.reset();
+    start_pose_.reset();
+    travelled_distance_m_ = 0.0;
+    geometric_laps_completed_ = 0;
     recording_ = true;
     route_pub_->publish(route_);
     set_status("RECORDING");
@@ -276,8 +354,15 @@ private:
   int minimum_route_points_{};
   int target_laps_{};
   bool auto_start_{};
+  bool use_fsds_lap_signal_{};
   bool recording_{false};
+  double closure_radius_m_{};
+  double minimum_loop_distance_m_{};
+  double closure_heading_tolerance_rad_{};
+  double travelled_distance_m_{0.0};
+  int geometric_laps_completed_{0};
   std::optional<std::size_t> lap_count_at_start_;
+  std::optional<geometry_msgs::msg::PoseStamped> start_pose_;
   nav_msgs::msg::Path route_;
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;

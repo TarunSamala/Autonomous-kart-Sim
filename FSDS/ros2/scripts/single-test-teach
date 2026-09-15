@@ -11,6 +11,26 @@ workspace_root="${script_path:h:h}"
 map_directory="$workspace_root/generated/maps/TrainingMap"
 map_prefix="$map_directory/track_sensor"
 route_file="$map_directory/route_sensor_slam.json"
+cone_map_file="$map_directory/cone_map.json"
+centerline_file="$map_directory/centerline_delaunay.json"
+target_laps=1
+
+while (( $# > 0 )); do
+  case "$1" in
+    --laps)
+      if (( $# < 2 )) || [[ "$2" != <-> ]] || (( $2 < 1 || $2 > 2 )); then
+        print -u2 "single-test-teach: --laps must be 1 or 2"
+        exit 2
+      fi
+      target_laps="$2"
+      shift 2
+      ;;
+    *)
+      print -u2 "usage: single-test teach [--laps 1|2]"
+      exit 2
+      ;;
+  esac
+done
 
 unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
 source /opt/ros/humble/setup.zsh
@@ -18,7 +38,7 @@ source "$workspace_root/install/setup.zsh"
 
 if ! nc -z -w 1 127.0.0.1 41451 >/dev/null 2>&1; then
   print -u2 "single-test-teach: FSDS is not running on 127.0.0.1:41451"
-  print -u2 "Run 'single-test prepare slam', start FSDS, then retry."
+  print -u2 "Run 'single-test prepare amz_style', start FSDS, then retry."
   exit 1
 fi
 
@@ -32,7 +52,7 @@ fi
 mkdir -p "$map_directory"
 typeset -a previous_artifacts
 for candidate in "$map_prefix.posegraph" "$map_prefix.data" "$map_prefix.yaml" \
-  "$map_prefix.pgm" "$route_file"; do
+  "$map_prefix.pgm" "$route_file" "$cone_map_file" "$centerline_file"; do
   [[ -f "$candidate" ]] && previous_artifacts+=("$candidate")
 done
 if (( ${#previous_artifacts} > 0 )); then
@@ -74,9 +94,9 @@ cleanup()
 trap cleanup INT TERM EXIT
 
 if ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; then
-  print "[1/5] ROS bridge already connected"
+  print "[1/6] ROS bridge already connected"
 else
-  print "[1/5] Starting ROS bridge"
+  print "[1/6] Starting ROS bridge"
   "$workspace_root/scripts/single-test-bridge" &
   bridge_pid=$!
   owns_bridge=true
@@ -98,13 +118,15 @@ if ! $bridge_ready; then
   exit 1
 fi
 
-print "[2/5] Starting SLAM Toolbox mapping"
-ros2 launch slam fsds_slam_mapping.launch.xml &
+print "[2/6] Starting SLAM + persistent cone/Delaunay mapping + RViz"
+ros2 launch autonomy fsds_amz_teach.launch.xml \
+  cone_map_file:="$cone_map_file" centerline_file:="$centerline_file" &
 mapping_pid=$!
 
 mapping_ready=false
 for _ in {1..60}; do
-  if ros2 service type /slam_toolbox/serialize_map >/dev/null 2>&1; then
+  if ros2 service type /slam_toolbox/serialize_map >/dev/null 2>&1 &&
+     ros2 service type /autonomy/cone_map/save >/dev/null 2>&1; then
     mapping_ready=true
     break
   fi
@@ -118,16 +140,19 @@ if ! $mapping_ready; then
   exit 1
 fi
 
-print "[3/5] Recording the localized route"
+print "[3/6] Recording the loop-closed route ($target_laps lap(s))"
 ros2 run slam route_recorder --ros-args \
   -p output_path:="$route_file" \
-  -p target_laps:=1 \
+  -p target_laps:="$target_laps" \
+  -p use_fsds_lap_signal:=false \
   -p auto_start:=true &
 recorder_pid=$!
 
-print "[4/5] Starting keyboard control"
-print "Click the FSDS window. Press E to arm, then W/A/S/D to drive one complete lap."
-print "The vehicle will stop automatically after the lap is recorded."
+print "[4/6] Starting keyboard control"
+print "Press E to arm, then W/A/S/D to drive $target_laps complete lap(s)."
+print "RViz will retain mapped cones (blue/yellow), Delaunay midpoints (orange),"
+print "the current triangulation, and the manually taught route."
+print "The vehicle will brake automatically when loop return is accepted."
 ros2 run teleop keyboard_teleop &
 teleop_pid=$!
 
@@ -153,18 +178,30 @@ wait "$teleop_pid" 2>/dev/null || true
 teleop_pid=0
 sleep 1
 
-print "[5/5] Serializing optimized pose graph"
+print "[5/6] Allowing the SLAM graph to settle, then saving the persistent cone map"
+sleep 2
+cone_map_response="$(ros2 service call /autonomy/cone_map/save std_srvs/srv/Trigger '{}')"
+print -r -- "$cone_map_response"
+if [[ "$cone_map_response" != *"success=True"* &&
+      "$cone_map_response" != *"success: true"* ]]; then
+  print -u2 "single-test-teach: cone map refused to save"
+  exit 1
+fi
+
+print "[6/6] Serializing optimized SLAM pose graph"
 ros2 service call /slam_toolbox/serialize_map \
   slam_toolbox/srv/SerializePoseGraph "{filename: '$map_prefix'}"
 
-if [[ ! -s "$map_prefix.posegraph" || ! -s "$map_prefix.data" || ! -s "$route_file" ]]; then
+if [[ ! -s "$map_prefix.posegraph" || ! -s "$map_prefix.data" ||
+      ! -s "$route_file" || ! -s "$cone_map_file" || ! -s "$centerline_file" ]]; then
   print -u2 "single-test-teach: one or more output artifacts are missing or empty"
   exit 1
 fi
 
 print "TEACH COMPLETE"
 print "Map:   $map_prefix"
+print "Cones: $cone_map_file"
 print "Route: $route_file"
-print "You can now run either:"
-print "  single-test launch slam"
-print "  single-test launch slam_stanley"
+print "Delaunay centreline: $centerline_file"
+print "You can now start autonomous repeat with:"
+print "  single-test launch amz_style"

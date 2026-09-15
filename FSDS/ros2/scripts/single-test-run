@@ -31,6 +31,24 @@ fi
 
 case "$experiment" in
   amz_style)
+    for required_file in \
+      "$workspace_root/generated/maps/TrainingMap/track_sensor.posegraph" \
+      "$workspace_root/generated/maps/TrainingMap/track_sensor.data" \
+      "$workspace_root/generated/maps/TrainingMap/route_sensor_slam.json" \
+      "$workspace_root/generated/maps/TrainingMap/cone_map.json" \
+      "$workspace_root/generated/maps/TrainingMap/centerline_delaunay.json"; do
+      if [[ ! -s "$required_file" ]]; then
+        print -u2 "single-test-run: AMZ teach artifact missing: $required_file"
+        print -u2 "Run: scripts/single-test teach-run"
+        exit 1
+      fi
+    done
+    exec "$workspace_root/scripts/single-test-autonomy" \
+      "$workspace_root/generated/maps/TrainingMap/track_sensor" \
+      "$workspace_root/generated/maps/TrainingMap/centerline_delaunay.json" \
+      "$manifest" "$results_directory"
+    ;;
+  delaunay_reactive)
     exec ros2 launch single_test amz_style.launch.xml \
       manifest:="$manifest" results_directory:="$results_directory" enabled:=false
     ;;
@@ -58,7 +76,7 @@ case "$experiment" in
     ;;
   *)
     print -u2 "single-test-run: unknown experiment: $experiment"
-    print -u2 "valid experiments: amz_style, behavior_cloning, slam, slam_stanley, general_autonomy"
+    print -u2 "valid experiments: amz_style, delaunay_reactive, behavior_cloning, slam, slam_stanley, general_autonomy"
     exit 2
     ;;
 esac

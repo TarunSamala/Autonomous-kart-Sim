@@ -12,9 +12,42 @@ This package is an entirely C++ LiDAR autonomy baseline for FSDS:
   -> /fsds/control_command
 ```
 
-## AMZ-style first-lap planner
+## AMZ-style teach and repeat
 
-The default local planner now uses an AMZ-inspired first-lap strategy without
+The `amz_style` experiment is a two-stage workflow:
+
+1. Manually drive one or two complete laps while SLAM localizes the kart.
+2. Accumulate left/right cone landmarks and raw Delaunay gate midpoints in
+   `slam/map` instead of discarding detections as they leave sensor range.
+3. Accept loop return only after the configured travel distance and heading
+   agreement are satisfied near the starting pose.
+4. Save the SLAM pose graph, observed cone map, manual route, and ordered
+   Delaunay centreline.
+5. Stop keyboard command publication and launch saved-map localization.
+6. Keep control disabled until the readiness gate passes and the operator
+   confirms arming.
+
+Prepare the sensor profile before starting FSDS, then run the integrated flow:
+
+```zsh
+FSDS/ros2/scripts/single-test prepare amz_style
+# Start FSDS, then:
+FSDS/ros2/scripts/single-test teach-run --laps 1
+```
+
+Press `E` to arm keyboard control, then use `W/A/S/D`. RViz displays the live
+triangulation, persistent cone landmarks, accumulated Delaunay centreline, and
+manual route. On accepted loop return the teach process brakes, saves the map,
+and transitions to autonomous replay. The replay follows
+`generated/maps/TrainingMap/centerline_delaunay.json`; the manual route is kept
+as evidence and ordering context, not used as the commanded path.
+
+`--auto-arm` is available for unattended simulation runs, but the default
+confirmation gate is recommended during development.
+
+## Reactive Delaunay planner
+
+The `delaunay_reactive` profile uses an AMZ-inspired local strategy without
 requiring VIO, VSLAM, a saved map, or FSDS testing-only track geometry:
 
 1. Combine the currently detected left and right cone positions.
@@ -37,6 +70,11 @@ the triangulation, pale blue lines are valid cross-track gates, green lines are
 beam-search candidates, and the thick red line is the selected candidate. The
 magenta `/autonomy/local_path` is the smoothed path actually consumed by the
 controller.
+
+Raw valid cross-track gate midpoints are published on
+`/autonomy/delaunay_midpoints`. During teaching, `cone_map_builder` transforms
+and associates them in `slam/map`, publishes `/autonomy/map/centerline`, and
+saves the ordered centreline after loop return.
 
 Launch perception and planning disabled, with the dedicated top-down view:
 
