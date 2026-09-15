@@ -1,0 +1,28 @@
+<launch>
+  <arg name="cone_map_file"/>
+  <arg name="centerline_file"/>
+  <arg name="autonomy_config"
+       default="$(find-pkg-share autonomy)/config/autonomy.yaml"/>
+  <arg name="rviz_config"
+       default="$(find-pkg-share autonomy)/config/amz_teach.rviz"/>
+  <arg name="rviz" default="true"/>
+
+  <!-- SLAM supplies the persistent global frame. Delaunay remains local and
+       advisory while the human driver teaches the track. -->
+  <include file="$(find-pkg-share slam)/launch/fsds_slam_mapping.launch.xml"/>
+
+  <node pkg="autonomy" exec="cone_detector" name="cone_detector" output="screen">
+    <param from="$(var autonomy_config)"/>
+  </node>
+  <node pkg="autonomy" exec="local_planner" name="local_planner" output="screen">
+    <param from="$(var autonomy_config)"/>
+  </node>
+  <node pkg="autonomy" exec="cone_map_builder" name="cone_map_builder" output="screen">
+    <param name="global_frame" value="slam/map"/>
+    <param name="save_path" value="$(var cone_map_file)"/>
+    <param name="centerline_path" value="$(var centerline_file)"/>
+  </node>
+
+  <node pkg="rviz2" exec="rviz2" name="amz_teach_rviz" output="screen"
+        args="-d $(var rviz_config)" if="$(var rviz)"/>
+</launch>

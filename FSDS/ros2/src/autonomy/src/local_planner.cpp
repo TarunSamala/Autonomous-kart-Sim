@@ -76,6 +76,8 @@ public:
         right_time_ = now();
       });
     path_pub_ = create_publisher<nav_msgs::msg::Path>("/autonomy/local_path", 10);
+    midpoint_pub_ = create_publisher<geometry_msgs::msg::PoseArray>(
+      "/autonomy/delaunay_midpoints", 10);
     debug_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>(
       "/autonomy/debug/delaunay_planner", 10);
     timer_ = create_wall_timer(50ms, std::bind(&LocalPlanner::publish_path, this));
@@ -113,6 +115,7 @@ private:
     if (!fresh(left_time_) || !fresh(right_time_)) {
       report_mode(PathMode::kNoPath, 0U, 0U);
       path_pub_->publish(path);
+      midpoint_pub_->publish(make_midpoints({}, path.header.stamp));
       debug_pub_->publish(make_debug_markers({}, path.header.stamp));
       return;
     }
@@ -160,7 +163,25 @@ private:
       path.poses.push_back(pose);
     }
     path_pub_->publish(path);
+    midpoint_pub_->publish(make_midpoints(delaunay_plan, path.header.stamp));
     debug_pub_->publish(make_debug_markers(delaunay_plan, path.header.stamp));
+  }
+
+  geometry_msgs::msg::PoseArray make_midpoints(
+    const autonomy::DelaunayPlan & plan, const builtin_interfaces::msg::Time & stamp) const
+  {
+    geometry_msgs::msg::PoseArray output;
+    output.header.frame_id = base_frame_;
+    output.header.stamp = stamp;
+    output.poses.reserve(plan.gates.size());
+    for (const auto & gate : plan.gates) {
+      geometry_msgs::msg::Pose pose;
+      pose.position.x = 0.5 * (gate.first.x + gate.second.x);
+      pose.position.y = 0.5 * (gate.first.y + gate.second.y);
+      pose.orientation.w = 1.0;
+      output.poses.push_back(pose);
+    }
+    return output;
   }
 
   visualization_msgs::msg::MarkerArray make_debug_markers(
@@ -300,6 +321,7 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr left_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr right_sub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr midpoint_pub_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };

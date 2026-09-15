@@ -36,6 +36,12 @@ target_include_directories(local_planner PRIVATE include)
 target_link_libraries(local_planner autonomy_geometry)
 ament_target_dependencies(local_planner geometry_msgs nav_msgs rclcpp visualization_msgs)
 
+add_executable(cone_map_builder src/cone_map_builder.cpp)
+target_compile_features(cone_map_builder PUBLIC cxx_std_17)
+target_link_libraries(cone_map_builder nlohmann_json::nlohmann_json)
+ament_target_dependencies(cone_map_builder
+  geometry_msgs nav_msgs rclcpp std_msgs std_srvs tf2 tf2_ros visualization_msgs)
+
 add_executable(track_reference_planner src/track_reference_planner.cpp)
 target_compile_features(track_reference_planner PUBLIC cxx_std_17)
 ament_target_dependencies(track_reference_planner
@@ -54,7 +60,8 @@ target_link_libraries(pure_pursuit autonomy_geometry)
 ament_target_dependencies(pure_pursuit
   fs_msgs geometry_msgs nav_msgs rclcpp std_msgs std_srvs)
 
-install(TARGETS autonomy_geometry cone_detector local_planner track_reference_planner route_planner pure_pursuit
+install(TARGETS autonomy_geometry cone_detector local_planner cone_map_builder
+  track_reference_planner route_planner pure_pursuit
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME})

@@ -1,0 +1,53 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+typeset -a teach_arguments
+auto_arm=false
+while (( $# > 0 )); do
+  case "$1" in
+    --laps)
+      if (( $# < 2 )); then
+        print -u2 "single-test-teach-repeat: --laps requires 1 or 2"
+        exit 2
+      fi
+      teach_arguments+=("--laps" "$2")
+      shift 2
+      ;;
+    --auto-arm)
+      auto_arm=true
+      shift
+      ;;
+    *)
+      print -u2 "usage: single-test teach-run [--laps 1|2] [--auto-arm]"
+      exit 2
+      ;;
+  esac
+done
+
+manifest="$workspace_root/generated/single_test/amz_style/manifest.json"
+if [[ ! -f "$manifest" ]]; then
+  print -u2 "single-test-teach-repeat: AMZ profile is not prepared"
+  print -u2 "Before FSDS starts, run: single-test prepare amz_style"
+  exit 1
+fi
+
+print "=== AMZ TEACH PHASE ==="
+"$workspace_root/scripts/single-test-teach" "${teach_arguments[@]}"
+
+print ""
+print "=== SAFE TRANSITION ==="
+print "Manual control is stopped and braking. Starting saved-map localization."
+print "Autonomy will remain disabled until the launch readiness gate passes."
+sleep 2
+
+if $auto_arm; then
+  exec "$workspace_root/scripts/single-test-launch" amz_style --auto-arm
+fi
+exec "$workspace_root/scripts/single-test-launch" amz_style

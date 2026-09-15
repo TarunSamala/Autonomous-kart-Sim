@@ -1,0 +1,35 @@
+schema_version: 1
+
+test:
+  id: fsds16_d455_amz_teach_repeat
+  track: TrainingMap
+  max_duration_s: 180.0
+  operation: autonomy
+
+sensors:
+  lidar: fsds_16
+  depth_camera: d455
+  chassis_imu: true
+
+algorithms:
+  odometry: imu_gss_sensor_odometry
+  slam: slam_toolbox_loop_closure
+  planner: persistent_cone_delaunay_centerline
+  controller: pure_pursuit
+  filter: slam_pose_graph
+
+artifacts:
+  map: generated/maps/TrainingMap/track_sensor
+  route: generated/maps/TrainingMap/centerline_delaunay.json
+  teaching_route: generated/maps/TrainingMap/route_sensor_slam.json
+  cone_map: generated/maps/TrainingMap/cone_map.json
+
+research:
+  family: amz_style
+  protocol: manual_teach_loop_close_autonomous_repeat
+  reference: "AMZ Driverless full-system mapping and planning architecture"
+  hypothesis: "A manually taught, loop-closed cone map and centreline can be localized and repeated autonomously without cone contact."
+  independent_variables: [teaching_laps, lidar_profile, association_radius, controller]
+  dependent_metrics: [completion, lap_time_s, cone_contacts, distance_m, localization_failures]
+  random_seed: 0
+  uses_privileged_simulation_data: false

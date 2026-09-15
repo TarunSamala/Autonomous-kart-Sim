@@ -58,9 +58,11 @@ public:
     max_cluster_points_ = declare_parameter<int>("max_cluster_points", 180);
     min_range_ = declare_parameter<double>("min_range", 0.5);
     max_range_ = declare_parameter<double>("max_range", 15.0);
-    min_z_ = declare_parameter<double>("min_z", -0.30);
-    max_z_ = declare_parameter<double>("max_z", 0.30);
-    max_cluster_extent_ = declare_parameter<double>("max_cluster_extent", 0.80);
+    // Heights are evaluated after transforming points into base_frame_. This
+    // keeps the road plane near z=0 regardless of the LiDAR mounting height.
+    min_z_ = declare_parameter<double>("min_z", 0.03);
+    max_z_ = declare_parameter<double>("max_z", 0.55);
+    max_cluster_extent_ = declare_parameter<double>("max_cluster_extent", 0.50);
 
     if (cluster_radius_ <= 0.0 || min_cluster_points_ <= 0 ||
       max_cluster_points_ < min_cluster_points_ || min_range_ < 0.0 ||
@@ -94,7 +96,8 @@ private:
   }
 
   std::vector<Point3> read_filtered_points(
-    const sensor_msgs::msg::PointCloud2 & message)
+    const sensor_msgs::msg::PointCloud2 & message,
+    const tf2::Transform & base_from_sensor)
   {
     std::vector<Point3> points;
     try {
@@ -102,14 +105,21 @@ private:
       sensor_msgs::PointCloud2ConstIterator<float> y(message, "y");
       sensor_msgs::PointCloud2ConstIterator<float> z(message, "z");
       for (; x != x.end(); ++x, ++y, ++z) {
-        const Point3 point{*x, *y, *z};
-        const double range = std::hypot(point.x, point.y);
-        if (std::isfinite(point.x) && std::isfinite(point.y) &&
-          std::isfinite(point.z) && point.x > 0.0 &&
-          point.z > min_z_ && point.z < max_z_ &&
+        const Point3 sensor_point{*x, *y, *z};
+        if (!std::isfinite(sensor_point.x) || !std::isfinite(sensor_point.y) ||
+          !std::isfinite(sensor_point.z))
+        {
+          continue;
+        }
+        const double range = std::hypot(sensor_point.x, sensor_point.y);
+        const tf2::Vector3 transformed = base_from_sensor *
+          tf2::Vector3(sensor_point.x, sensor_point.y, sensor_point.z);
+        const Point3 base_point{transformed.x(), transformed.y(), transformed.z()};
+        if (base_point.x > 0.0 &&
+          base_point.z > min_z_ && base_point.z < max_z_ &&
           range > min_range_ && range < max_range_)
         {
-          points.push_back(point);
+          points.push_back(base_point);
         }
       }
     } catch (const std::runtime_error & error) {
@@ -216,17 +226,14 @@ private:
       tf2::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
       tf2::Vector3(translation.x, translation.y, translation.z));
 
-    const auto filtered_points = read_filtered_points(*message);
+    const auto filtered_points = read_filtered_points(*message, base_from_sensor);
     const auto clusters = cluster(filtered_points);
     std::vector<Point3> left;
     std::vector<Point3> right;
     for (const auto & points : clusters) {
       Point3 centroid{};
       if (!centroid_if_cone(points, centroid)) {continue;}
-      const tf2::Vector3 transformed = base_from_sensor *
-        tf2::Vector3(centroid.x, centroid.y, centroid.z);
-      Point3 base_point{transformed.x(), transformed.y(), transformed.z()};
-      (base_point.y >= 0.0 ? left : right).push_back(base_point);
+      (centroid.y >= 0.0 ? left : right).push_back(centroid);
     }
     RCLCPP_INFO_THROTTLE(
       get_logger(), *get_clock(), 2000,
