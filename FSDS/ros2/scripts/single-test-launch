@@ -94,6 +94,14 @@ if ! $bridge_ready; then
   exit 1
 fi
 
+publisher_count="$(ros2 topic info /fsds/control_command 2>/dev/null |
+  awk '/Publisher count:/ {print $3}')"
+if [[ -n "$publisher_count" && "$publisher_count" != 0 ]]; then
+  print -u2 "single-test-launch: /fsds/control_command already has $publisher_count publisher(s)"
+  print -u2 "Stop the previous controller or keyboard teleop before starting another experiment."
+  exit 1
+fi
+
 print "[2/3] Starting $experiment stack (controller remains disabled)"
 "$workspace_root/scripts/single-test-run" "$experiment" &
 stack_pid=$!
@@ -118,6 +126,13 @@ if ! $services_ready; then
   print -u2 "single-test-launch: experiment services did not become ready within 30 seconds"
   exit 1
 fi
+# Guard against a short-lived launch process satisfying the readiness test via
+# services left behind by an older stack.
+sleep 0.5
+if ! kill -0 "$stack_pid" 2>/dev/null; then
+  print -u2 "single-test-launch: experiment stack exited before READY"
+  exit 1
+fi
 
 print "[3/3] READY — inspect FSDS/RViz now; the vehicle is not moving"
 if ! $auto_arm; then
@@ -127,24 +142,24 @@ fi
 "$workspace_root/scripts/single-test-arm" "$experiment"
 print "ARMED — the vehicle may move now. Ctrl+C disarms and cleans up."
 
-last_status=""
+last_test_status=""
 while kill -0 "$stack_pid" 2>/dev/null; do
   status_output="$(timeout 2 ros2 topic echo /single_test/status \
     --once --qos-reliability reliable --qos-durability transient_local 2>/dev/null || true)"
-  status="$(print -r -- "$status_output" | awk -F': ' '/^data:/ {gsub(/\047/, "", $2); print $2; exit}')"
-  if [[ -n "$status" && "$status" != "$last_status" ]]; then
-    print "Test status: $status"
-    last_status="$status"
+  test_status="$(print -r -- "$status_output" | awk -F': ' '/^data:/ {gsub(/\047/, "", $2); print $2; exit}')"
+  if [[ -n "$test_status" && "$test_status" != "$last_test_status" ]]; then
+    print "Test status: $test_status"
+    last_test_status="$test_status"
   fi
-  if [[ "$status" == "COMPLETE" || "$status" == "FAILED" ]]; then
+  if [[ "$test_status" == "COMPLETE" || "$test_status" == "FAILED" ]]; then
     break
   fi
   sleep 1
 done
 
-if [[ "$last_status" == "COMPLETE" ]]; then
+if [[ "$last_test_status" == "COMPLETE" ]]; then
   print "Test complete. Result JSON is under: $workspace_root/results/$experiment"
-elif [[ "$last_status" == "FAILED" ]]; then
+elif [[ "$last_test_status" == "FAILED" ]]; then
   print -u2 "Test failed; inspect the launch output above."
 else
   print -u2 "Experiment stack exited before producing a terminal status."
