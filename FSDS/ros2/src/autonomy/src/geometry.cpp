@@ -542,4 +542,51 @@ double pure_pursuit_curvature(const Point2 & target)
   const double distance_squared = target.x * target.x + target.y * target.y;
   return distance_squared < 1e-6 ? 0.0 : 2.0 * target.y / distance_squared;
 }
+
+std::optional<double> stanley_steering_angle(
+  const std::vector<Point2> & points, const double speed_mps,
+  const double cross_track_gain, const double softening_speed_mps)
+{
+  if (points.size() < 2 || !std::isfinite(speed_mps) || speed_mps < 0.0 ||
+    !std::isfinite(cross_track_gain) || cross_track_gain <= 0.0 ||
+    !std::isfinite(softening_speed_mps) || softening_speed_mps <= 0.0)
+  {
+    return std::nullopt;
+  }
+
+  double best_distance_squared = std::numeric_limits<double>::infinity();
+  double best_cross_track_error = 0.0;
+  double best_heading_error = 0.0;
+  for (std::size_t index = 0; index + 1 < points.size(); ++index) {
+    const Point2 & start = points[index];
+    const Point2 & end = points[index + 1];
+    const double dx = end.x - start.x;
+    const double dy = end.y - start.y;
+    const double length_squared = dx * dx + dy * dy;
+    if (length_squared <= kGeometryEpsilon) {
+      continue;
+    }
+
+    // Project the vehicle origin onto each local-path segment. The selected
+    // segment provides both the signed lateral error and desired heading.
+    const double projection = std::clamp(
+      -(start.x * dx + start.y * dy) / length_squared, 0.0, 1.0);
+    const double closest_x = start.x + projection * dx;
+    const double closest_y = start.y + projection * dy;
+    const double distance_squared = closest_x * closest_x + closest_y * closest_y;
+    if (distance_squared < best_distance_squared) {
+      best_distance_squared = distance_squared;
+      best_cross_track_error = closest_y;
+      const double path_heading = std::atan2(dy, dx);
+      best_heading_error = std::atan2(std::sin(path_heading), std::cos(path_heading));
+    }
+  }
+
+  if (!std::isfinite(best_distance_squared)) {
+    return std::nullopt;
+  }
+  return best_heading_error + std::atan2(
+    cross_track_gain * best_cross_track_error,
+    speed_mps + softening_speed_mps);
+}
 }  // namespace autonomy

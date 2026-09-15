@@ -2,10 +2,12 @@
 
 void UBenchmarkMenuHost::Configure(
     const FSimpleDelegate& InConnectBridge,
+    const FSimpleDelegate& InToggleManualDrive,
     const FOnPrepareBenchmark& InPrepareBenchmark,
     const FSimpleDelegate& InClose)
 {
     ConnectBridge = InConnectBridge;
+    ToggleManualDrive = InToggleManualDrive;
     PrepareBenchmark = InPrepareBenchmark;
     Close = InClose;
 }
@@ -14,6 +16,7 @@ TSharedRef<SWidget> UBenchmarkMenuHost::RebuildWidget()
 {
     SAssignNew(BenchmarkMenu, SBenchmarkMenu)
         .OnConnectBridge(ConnectBridge)
+        .OnToggleManualDrive(ToggleManualDrive)
         .OnPrepareBenchmark(PrepareBenchmark)
         .OnClose(Close);
 

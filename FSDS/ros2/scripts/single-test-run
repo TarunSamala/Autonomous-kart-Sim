@@ -44,6 +44,12 @@ case "$experiment" in
       "$workspace_root/generated/maps/TrainingMap/route_sensor_slam.json" \
       "$manifest" "$results_directory"
     ;;
+  slam_stanley)
+    exec "$workspace_root/scripts/single-test-autonomy" \
+      "$workspace_root/generated/maps/TrainingMap/track_sensor" \
+      "$workspace_root/generated/maps/TrainingMap/route_sensor_slam.json" \
+      "$manifest" "$results_directory" stanley
+    ;;
   general_autonomy)
     print -u2 "WARNING: general_autonomy uses FSDS testing-only track and odometry."
     print -u2 "It is a controller oracle baseline, not deployable autonomy."
@@ -52,7 +58,7 @@ case "$experiment" in
     ;;
   *)
     print -u2 "single-test-run: unknown experiment: $experiment"
-    print -u2 "valid experiments: amz_style, behavior_cloning, slam, general_autonomy"
+    print -u2 "valid experiments: amz_style, behavior_cloning, slam, slam_stanley, general_autonomy"
     exit 2
     ;;
 esac

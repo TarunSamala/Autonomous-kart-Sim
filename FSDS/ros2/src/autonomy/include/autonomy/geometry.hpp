@@ -49,4 +49,7 @@ std::vector<Point2> smooth_path(const std::vector<Point2> & points);
 std::optional<Point2> select_lookahead(
   const std::vector<Point2> & points, double lookahead_distance);
 double pure_pursuit_curvature(const Point2 & target);
+std::optional<double> stanley_steering_angle(
+  const std::vector<Point2> & points, double speed_mps,
+  double cross_track_gain, double softening_speed_mps);
 }  // namespace autonomy

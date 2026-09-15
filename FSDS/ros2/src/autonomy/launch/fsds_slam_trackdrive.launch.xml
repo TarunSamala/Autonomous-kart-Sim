@@ -3,6 +3,7 @@
   <arg name="use_vio" default="false"/>
   <arg name="map_file"/>
   <arg name="route_file"/>
+  <arg name="controller_type" default="pure_pursuit"/>
   <arg name="localization_timeout_s" default="2.0"/>
   <arg name="autonomy_config" default="$(find-pkg-share autonomy)/config/autonomy.yaml"/>
   <arg name="slam_config"
@@ -25,5 +26,6 @@
     <param from="$(var autonomy_config)"/>
     <param name="enabled" value="$(var enabled)"/>
     <param name="require_go" value="false"/>
+    <param name="controller_type" value="$(var controller_type)"/>
   </node>
 </launch>

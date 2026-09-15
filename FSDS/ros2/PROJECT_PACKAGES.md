@@ -20,7 +20,7 @@ intentionally omit a project prefix so that the software graph stays concise.
 | `state_estimator` | Planned | VIO, wheel odometry and chassis IMU fusion |
 | `perception` | Planned | Cones, obstacles and free-space estimation |
 | `control` | Planned | Path tracking and command arbitration |
-| `autonomy` | Implemented baseline | C++ LiDAR local planning, saved-route planning and Pure Pursuit |
+| `autonomy` | Implemented baseline | C++ LiDAR local planning, saved-route planning, Pure Pursuit and Stanley tracking |
 | `slam` | Implemented baseline | Sensor odometry, SLAM Toolbox mapping/localization and route recording |
 
 Generated `build`, `install`, `log`, `generated`, and `results` directories are

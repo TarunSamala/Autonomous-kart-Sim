@@ -57,7 +57,7 @@ The complete saved-map pipeline is:
 
 ```text
 LiDAR + chassis IMU/GSS -> SLAM Toolbox localization
-saved route + localized pose -> C++ route planner -> C++ Pure Pursuit
+saved route + localized pose -> C++ route planner -> C++ Pure Pursuit or Stanley
 ```
 
 Launch it through the reproducible Single Test wrapper:
@@ -71,3 +71,9 @@ scripts/single-test-arm
 Decision nodes do not subscribe to `/fsds/testing_only/track` or
 `/fsds/testing_only/odom`. `/fsds/testing_only/extra_info` is consumed only as
 the benchmark/safety authority for lap completion and cone contact.
+
+For the integrated manual teach workflow, run `scripts/single-test prepare
+slam` before FSDS starts, then `scripts/single-test teach` after it starts.
+This records one manual lap and serializes both required artifacts. Afterwards,
+`scripts/single-test launch slam` runs Pure Pursuit and `scripts/single-test
+launch slam_stanley` runs Stanley against the same map and route.

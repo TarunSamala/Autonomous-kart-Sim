@@ -53,6 +53,13 @@ private:
     FString findBridgeStartScript() const;
     void updateBridgeProcessState();
     void setBridgeStatus(const FText& status, const FLinearColor& color);
+    void toggleManualDrive();
+    FString findManualDriveScript() const;
+    void updateManualDriveProcessState();
+    void setManualDriveStatus(
+        const FText& status,
+        const FLinearColor& color,
+        bool is_running);
     void prepareSingleTest(
         const FString& experiment,
         const FString& lidar_profile,
@@ -72,6 +79,10 @@ private:
     FProcHandle bridge_process_;
     FTimerHandle bridge_process_timer_;
     bool bridge_process_was_running_ = false;
+    FProcHandle manual_drive_process_;
+    FTimerHandle manual_drive_process_timer_;
+    bool manual_drive_process_was_running_ = false;
+    bool manual_drive_stop_requested_ = false;
     FProcHandle preparation_process_;
     FTimerHandle preparation_process_timer_;
     bool preparation_process_was_running_ = false;

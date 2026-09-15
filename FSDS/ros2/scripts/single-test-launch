@@ -8,12 +8,12 @@ auto_arm=false
 if [[ "${2:-}" == "--auto-arm" ]]; then
   auto_arm=true
 elif [[ -n "${2:-}" ]]; then
-  print -u2 "usage: single-test-launch [amz_style|behavior_cloning|slam|general_autonomy] [--auto-arm]"
+  print -u2 "usage: single-test-launch [amz_style|behavior_cloning|slam|slam_stanley|general_autonomy] [--auto-arm]"
   exit 2
 fi
 
 case "$experiment" in
-  amz_style|behavior_cloning|slam|general_autonomy) ;;
+  amz_style|behavior_cloning|slam|slam_stanley|general_autonomy) ;;
   *)
     print -u2 "single-test-launch: unknown experiment: $experiment"
     exit 2

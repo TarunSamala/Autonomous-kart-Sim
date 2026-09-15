@@ -51,6 +51,7 @@ pure_pursuit:
   ros__parameters:
     enabled: false
     require_go: true
+    controller_type: pure_pursuit
     lookahead_distance: 1.5
     wheelbase: 1.55
     max_steering_angle: 0.436332
@@ -77,3 +78,6 @@ pure_pursuit:
     # lap. Ignore that event; TrainingMap is far longer than this threshold.
     minimum_lap_distance_m: 100.0
     extra_info_timeout: 2.0
+    # Used only when controller_type is stanley.
+    stanley_gain: 1.0
+    stanley_softening_speed: 0.5
