@@ -7,9 +7,11 @@ cone_detector:
     max_cluster_points: 180
     min_range: 0.5
     max_range: 15.0
-    min_z: -0.50
-    max_z: 0.10
-    max_cluster_extent: 0.65
+    # Base-frame height gate. Lidar1 is 0.20 m above the road, so filtering in
+    # the raw sensor frame would otherwise retain the ground at z=-0.20 m.
+    min_z: 0.03
+    max_z: 0.55
+    max_cluster_extent: 0.50
 
 local_planner:
   ros__parameters:
