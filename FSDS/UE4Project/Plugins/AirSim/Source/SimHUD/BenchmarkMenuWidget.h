@@ -96,7 +96,6 @@ private:
     FProfileOptionPtr SelectedLidar;
     FProfileOptionPtr SelectedDepth;
 
-    TSharedPtr<class SComboBox<FProfileOptionPtr>> ExperimentComboBox;
     TSharedPtr<class SComboBox<FProfileOptionPtr>> LidarComboBox;
     TSharedPtr<class SComboBox<FProfileOptionPtr>> DepthComboBox;
     TSharedPtr<STextBlock> BridgeStatusText;

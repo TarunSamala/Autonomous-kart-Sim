@@ -56,12 +56,20 @@ void ASimHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
     if (bridge_process_.IsValid())
     {
+        if (FPlatformProcess::IsProcRunning(bridge_process_))
+        {
+            FPlatformProcess::TerminateProc(bridge_process_, true);
+        }
         FPlatformProcess::CloseProc(bridge_process_);
         bridge_process_.Reset();
     }
 
     if (preparation_process_.IsValid())
     {
+        if (FPlatformProcess::IsProcRunning(preparation_process_))
+        {
+            FPlatformProcess::TerminateProc(preparation_process_, true);
+        }
         FPlatformProcess::CloseProc(preparation_process_);
         preparation_process_.Reset();
     }
@@ -80,7 +88,10 @@ void ASimHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ASimHUD::inputEventToggleHelp()
 {
-    widget_->toggleHelpVisibility();
+    if (widget_)
+    {
+        widget_->toggleHelpVisibility();
+    }
 }
 
 void ASimHUD::createMainWidget()
@@ -95,6 +106,12 @@ void ASimHUD::createMainWidget()
     {
         widget_ = nullptr;
         UAirBlueprintLib::LogMessage(TEXT("Cannot instantiate BP_SimHUDWidget blueprint!"), TEXT(""), LogDebugLevel::Failure);
+    }
+
+    if (!widget_)
+    {
+        UE_LOG(LogTemp, Error, TEXT("SimHUD: legacy HUD widget is unavailable"));
+        return;
     }
 
     widget_->AddToViewport();

@@ -298,35 +298,6 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSidebar()
                 ]
                 + SVerticalBox::Slot()
                 .AutoHeight()
-                .Padding(0.0f, 8.0f, 0.0f, 0.0f)
-                [
-                    SNew(SBorder)
-                    .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                    .BorderBackgroundColor(FLinearColor::Transparent)
-                    .Padding(FMargin(13.0f, 13.0f))
-                    [
-                        SNew(SVerticalBox)
-                        + SVerticalBox::Slot()
-                        .AutoHeight()
-                        [
-                            SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("02    MULTI TEST")))
-                            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
-                            .ColorAndOpacity(BenchmarkTheme::TextMuted)
-                        ]
-                        + SVerticalBox::Slot()
-                        .AutoHeight()
-                        .Padding(27.0f, 4.0f, 0.0f, 0.0f)
-                        [
-                            SNew(STextBlock)
-                            .Text(FText::FromString(TEXT("Planned / competitive benchmark")))
-                            .Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
-                            .ColorAndOpacity(BenchmarkTheme::TextMuted)
-                        ]
-                    ]
-                ]
-                + SVerticalBox::Slot()
-                .AutoHeight()
                 .Padding(8.0f, 28.0f, 0.0f, 12.0f)
                 [
                     SNew(STextBlock)
@@ -762,7 +733,6 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
     FProfileOptionPtr* Selected,
     TSharedPtr<SComboBox<FProfileOptionPtr>>* ComboBox)
 {
-    const bool IsExperiment = Options == &ExperimentOptions;
     const bool IsLidar = Options == &LidarOptions;
 
     return SNew(SBorder)
@@ -812,15 +782,11 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
                     .OnGenerateWidget(this, &SBenchmarkMenu::GenerateProfileOption)
                     .OnSelectionChanged(
                         this,
-                        IsExperiment ? &SBenchmarkMenu::SelectExperiment :
-                        (IsLidar ? &SBenchmarkMenu::SelectLidar : &SBenchmarkMenu::SelectDepth))
+                        IsLidar ? &SBenchmarkMenu::SelectLidar : &SBenchmarkMenu::SelectDepth)
                     .ContentPadding(FMargin(14.0f, 9.0f))
                     [
                         SNew(STextBlock)
-                        .Text(IsExperiment
-                            ? TAttribute<FText>::Create(
-                                TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedExperimentLabel))
-                            : IsLidar
+                        .Text(IsLidar
                             ? TAttribute<FText>::Create(
                                 TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetSelectedLidarLabel))
                             : TAttribute<FText>::Create(
@@ -832,10 +798,7 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSensorSelector(
                 + SVerticalBox::Slot().AutoHeight().Padding(2.0f, 9.0f, 0.0f, 0.0f)
                 [
                     SNew(STextBlock)
-                    .Text(IsExperiment
-                        ? TAttribute<FText>::Create(
-                            TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetExperimentDescription))
-                        : IsLidar
+                    .Text(IsLidar
                         ? TAttribute<FText>::Create(
                             TAttribute<FText>::FGetter::CreateSP(this, &SBenchmarkMenu::GetLidarDescription))
                         : TAttribute<FText>::Create(
