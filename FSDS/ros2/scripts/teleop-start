@@ -5,7 +5,9 @@ set -e
 script_path="${0:A}"
 
 if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
-  exec distrobox enter kart-ros2-humble -- "$script_path" "$@"
+  # This script is also launched by the Unreal HUD without a terminal.
+  # KeyboardTeleop reads global X11 key state, so a pseudo-TTY is unnecessary.
+  exec distrobox enter --no-tty kart-ros2-humble -- "$script_path" "$@"
 fi
 
 workspace_root="${script_path:h:h}"
@@ -20,4 +22,12 @@ if [[ ! -f "$workspace_setup" ]]; then
 fi
 
 source "$workspace_setup"
+
+publisher_count="$(ros2 topic info /fsds/control_command 2>/dev/null | awk '/Publisher count:/ {print $3}')"
+if [[ -n "$publisher_count" && "$publisher_count" != 0 ]]; then
+  print -u2 "teleop-start: /fsds/control_command already has $publisher_count publisher(s)"
+  print -u2 "Stop the active autonomy controller or previous teleop process first."
+  exit 1
+fi
+
 exec ros2 run teleop keyboard_teleop "$@"

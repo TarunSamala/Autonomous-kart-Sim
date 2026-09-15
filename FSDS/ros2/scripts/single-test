@@ -11,6 +11,10 @@ case "$action" in
   prepare)
     exec "$workspace_root/scripts/single-test-prepare" --experiment "$experiment"
     ;;
+  teach|map)
+    shift
+    exec "$workspace_root/scripts/single-test-teach" "$@"
+    ;;
   launch|start)
     if (( $# >= 2 )); then
       shift 2
@@ -61,16 +65,19 @@ case "$action" in
     print ""
     print "actions:"
     print "  prepare   Generate/apply settings before FSDS starts"
+    print "  teach     Manually drive one lap; save SLAM graph and route"
     print "  launch    Start bridge + stack; prompt once before arming"
     print "  check     Check settings, FSDS RPC, bridge and core topics"
     print "  arm       Arm an already-running stack"
     print "  stop      Disarm and stop result recording"
     print "  rviz      Open the sensor visualization"
     print ""
-    print "experiments: amz_style, behavior_cloning, slam, general_autonomy"
+    print "experiments: amz_style, behavior_cloning, slam, slam_stanley, general_autonomy"
     print "example:"
     print "  single-test prepare amz_style"
     print "  single-test launch amz_style"
+    print "  single-test prepare slam   # before starting FSDS"
+    print "  single-test teach          # drive one mapping lap"
     ;;
   *)
     print -u2 "single-test: unknown action: $action"

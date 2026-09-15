@@ -44,6 +44,7 @@ void ASimHUD::BeginPlay()
 void ASimHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     GetWorldTimerManager().ClearTimer(bridge_process_timer_);
+    GetWorldTimerManager().ClearTimer(manual_drive_process_timer_);
     GetWorldTimerManager().ClearTimer(preparation_process_timer_);
     removeBridgeControlWidget();
 
@@ -72,6 +73,16 @@ void ASimHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
         }
         FPlatformProcess::CloseProc(preparation_process_);
         preparation_process_.Reset();
+    }
+
+    if (manual_drive_process_.IsValid())
+    {
+        if (FPlatformProcess::IsProcRunning(manual_drive_process_))
+        {
+            FPlatformProcess::TerminateProc(manual_drive_process_, true);
+        }
+        FPlatformProcess::CloseProc(manual_drive_process_);
+        manual_drive_process_.Reset();
     }
 
     if (widget_)
@@ -157,6 +168,9 @@ void ASimHUD::createBridgeControlWidget()
         FSimpleDelegate::CreateLambda([this]() {
             connectRosBridge();
         }),
+        FSimpleDelegate::CreateUObject(
+            this,
+            &ASimHUD::toggleManualDrive),
         FOnPrepareBenchmark::CreateUObject(
             this,
             &ASimHUD::prepareSingleTest),
@@ -303,6 +317,150 @@ void ASimHUD::setBridgeStatus(const FText& status, const FLinearColor& color)
     if (benchmark_menu_.IsValid())
     {
         benchmark_menu_->SetBridgeStatus(status, color);
+    }
+}
+
+void ASimHUD::toggleManualDrive()
+{
+    if (manual_drive_process_.IsValid()
+        && FPlatformProcess::IsProcRunning(manual_drive_process_))
+    {
+        setManualDriveStatus(
+            FText::FromString(TEXT("STOPPING / BRAKE COMMAND SENT")),
+            FLinearColor(1.0f, 0.68f, 0.18f),
+            true);
+        manual_drive_stop_requested_ = true;
+        FPlatformProcess::TerminateProc(manual_drive_process_, true);
+        return;
+    }
+
+    if (manual_drive_process_.IsValid())
+    {
+        FPlatformProcess::CloseProc(manual_drive_process_);
+        manual_drive_process_.Reset();
+    }
+
+    const FString script_path = findManualDriveScript();
+    if (script_path.IsEmpty())
+    {
+        setManualDriveStatus(
+            FText::FromString(TEXT("TELEOP SCRIPT NOT FOUND")),
+            FLinearColor(1.0f, 0.28f, 0.28f),
+            false);
+        return;
+    }
+
+    setManualDriveStatus(
+        FText::FromString(TEXT("STARTING...")),
+        FLinearColor(1.0f, 0.68f, 0.18f),
+        false);
+    manual_drive_stop_requested_ = false;
+
+    uint32 process_id = 0;
+    manual_drive_process_ = FPlatformProcess::CreateProc(
+        *script_path,
+        TEXT(""),
+        false,
+        false,
+        false,
+        &process_id,
+        0,
+        nullptr,
+        nullptr);
+
+    if (!manual_drive_process_.IsValid())
+    {
+        setManualDriveStatus(
+            FText::FromString(TEXT("FAILED TO START")),
+            FLinearColor(1.0f, 0.28f, 0.28f),
+            false);
+        return;
+    }
+
+    manual_drive_process_was_running_ = true;
+    GetWorldTimerManager().SetTimer(
+        manual_drive_process_timer_,
+        this,
+        &ASimHUD::updateManualDriveProcessState,
+        0.25f,
+        true);
+    updateManualDriveProcessState();
+}
+
+FString ASimHUD::findManualDriveScript() const
+{
+    const FString configured_path = FPlatformMisc::GetEnvironmentVariable(
+        TEXT("FSDS_MANUAL_DRIVE_SCRIPT"));
+
+    const TArray<FString> candidates = {
+        configured_path,
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::ProjectDir(), TEXT("../ros2/scripts/teleop-start"))),
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::LaunchDir(), TEXT("ros2/scripts/teleop-start"))),
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::LaunchDir(), TEXT("../ros2/scripts/teleop-start")))
+    };
+
+    for (const FString& candidate : candidates)
+    {
+        if (!candidate.IsEmpty() && FPaths::FileExists(candidate))
+        {
+            return candidate;
+        }
+    }
+    return FString();
+}
+
+void ASimHUD::updateManualDriveProcessState()
+{
+    const bool is_running = manual_drive_process_.IsValid()
+        && FPlatformProcess::IsProcRunning(manual_drive_process_);
+    if (is_running)
+    {
+        manual_drive_process_was_running_ = true;
+        setManualDriveStatus(
+            FText::FromString(TEXT("RUNNING / PRESS E TO ARM")),
+            FLinearColor(0.22f, 0.91f, 0.55f),
+            true);
+        return;
+    }
+
+    if (manual_drive_process_was_running_)
+    {
+        int32 return_code = -1;
+        const bool has_return_code = manual_drive_process_.IsValid()
+            && FPlatformProcess::GetProcReturnCode(manual_drive_process_, &return_code);
+        const bool clean_exit = manual_drive_stop_requested_
+            || (has_return_code && return_code == 0);
+        setManualDriveStatus(
+            clean_exit
+                ? FText::FromString(TEXT("STOPPED / VEHICLE BRAKED"))
+                : FText::FromString(TEXT("STOPPED / CHECK ROS LOG")),
+            clean_exit
+                ? FLinearColor(0.52f, 0.55f, 0.55f)
+                : FLinearColor(1.0f, 0.28f, 0.28f),
+            false);
+        manual_drive_process_was_running_ = false;
+        manual_drive_stop_requested_ = false;
+    }
+
+    if (manual_drive_process_.IsValid())
+    {
+        FPlatformProcess::CloseProc(manual_drive_process_);
+        manual_drive_process_.Reset();
+    }
+    GetWorldTimerManager().ClearTimer(manual_drive_process_timer_);
+}
+
+void ASimHUD::setManualDriveStatus(
+    const FText& status,
+    const FLinearColor& color,
+    bool is_running)
+{
+    if (benchmark_menu_.IsValid())
+    {
+        benchmark_menu_->SetManualDriveStatus(status, color, is_running);
     }
 }
 

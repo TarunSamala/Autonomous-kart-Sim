@@ -37,6 +37,7 @@ const FLinearColor Danger(1.0f, 0.28f, 0.28f, 1.0f);
 void SBenchmarkMenu::Construct(const FArguments& InArgs)
 {
     OnConnectBridge = InArgs._OnConnectBridge;
+    OnToggleManualDrive = InArgs._OnToggleManualDrive;
     OnPrepareBenchmark = InArgs._OnPrepareBenchmark;
     OnClose = InArgs._OnClose;
 
@@ -52,6 +53,10 @@ void SBenchmarkMenu::Construct(const FArguments& InArgs)
         MakeShared<FBenchmarkProfileOption>(
             TEXT("slam"), TEXT("SLAM Toolbox Track Drive"),
             TEXT("Pose graph · recorded route · Pure Pursuit"),
+            TEXT("MAPPED")),
+        MakeShared<FBenchmarkProfileOption>(
+            TEXT("slam_stanley"), TEXT("SLAM + Stanley Track Drive"),
+            TEXT("Same pose graph and route · Stanley controller"),
             TEXT("MAPPED")),
         MakeShared<FBenchmarkProfileOption>(
             TEXT("general_autonomy"), TEXT("General Autonomy Baseline"),
@@ -572,6 +577,35 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                         .ColorAndOpacity(BenchmarkTheme::Text)
                     ]
                 ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 20.0f, 0.0f, 6.0f)
+                [
+                    SNew(STextBlock)
+                    .Text(FText::FromString(TEXT("MANUAL CONTROL")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
+                    .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                ]
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SAssignNew(ManualDriveStatusText, STextBlock)
+                    .Text(FText::FromString(TEXT("STOPPED")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+                    .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(&SecondaryButtonStyle)
+                    .IsEnabled(this, &SBenchmarkMenu::CanToggleManualDrive)
+                    .HAlign(HAlign_Center)
+                    .ToolTipText(FText::FromString(TEXT("Launch C++ keyboard control. Press E to arm, W/A/S/D to drive, and Space to brake.")))
+                    .OnClicked(this, &SBenchmarkMenu::HandleToggleManualDrive)
+                    [
+                        SNew(STextBlock)
+                        .Text(this, &SBenchmarkMenu::GetManualDriveButtonLabel)
+                        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+                        .ColorAndOpacity(BenchmarkTheme::Text)
+                    ]
+                ]
                 + SVerticalBox::Slot().FillHeight(1.0f)
                 [
                     SNew(SSpacer)
@@ -654,6 +688,34 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildExperimentGrid()
             .Padding(6.0f, 6.0f, 0.0f, 0.0f)
             [
                 BuildExperimentCard(ExperimentOptions[3])
+            ]
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        .Padding(0.0f, 12.0f, 0.0f, 0.0f)
+        [
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(0.0f, 0.0f, 6.0f, 0.0f)
+            [
+                BuildExperimentCard(ExperimentOptions[4])
+            ]
+            + SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(6.0f, 0.0f, 0.0f, 0.0f)
+            [
+                SNew(SBorder)
+                .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                .BorderBackgroundColor(BenchmarkTheme::Surface)
+                .Padding(16.0f)
+                [
+                    SNew(STextBlock)
+                    .Text(FText::FromString(TEXT("MANUAL TEACH LAP\nRecord the map and route once, then compare both mapped controllers.")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
+                    .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                    .AutoWrapText(true)
+                ]
             ]
         ];
 }
@@ -909,7 +971,7 @@ void SBenchmarkMenu::SelectExperiment(FProfileOptionPtr Option, ESelectInfo::Typ
         SelectedLidar = LidarOptions[0];
         SelectedDepth = DepthOptions[1];
     }
-    else if (Option->Id == TEXT("slam"))
+    else if (Option->Id == TEXT("slam") || Option->Id == TEXT("slam_stanley"))
     {
         SelectedLidar = LidarOptions[2];
         SelectedDepth = DepthOptions[4];
@@ -1004,7 +1066,8 @@ FText SBenchmarkMenu::GetConfigurationState() const
         return FText::FromString(TEXT("BEHAVIOR CLONING REQUIRES RGB-D"));
     }
     if ((SelectedExperiment->Id == TEXT("amz_style") ||
-         SelectedExperiment->Id == TEXT("slam")) &&
+         SelectedExperiment->Id == TEXT("slam") ||
+         SelectedExperiment->Id == TEXT("slam_stanley")) &&
         SelectedLidar->Id == TEXT("off"))
     {
         return FText::FromString(TEXT("THIS PROFILE REQUIRES LIDAR"));
@@ -1015,6 +1078,17 @@ FText SBenchmarkMenu::GetConfigurationState() const
 FSlateColor SBenchmarkMenu::GetConfigurationStateColor() const
 {
     return FSlateColor(CanPrepare() ? BenchmarkTheme::Success : BenchmarkTheme::Danger);
+}
+
+FText SBenchmarkMenu::GetManualDriveButtonLabel() const
+{
+    return FText::FromString(
+        IsManualDriveRunning ? TEXT("STOP MANUAL DRIVE") : TEXT("START MANUAL DRIVE"));
+}
+
+bool SBenchmarkMenu::CanToggleManualDrive() const
+{
+    return IsBridgeRunning || IsManualDriveRunning;
 }
 
 bool SBenchmarkMenu::CanPrepare() const
@@ -1029,7 +1103,8 @@ bool SBenchmarkMenu::CanPrepare() const
         return false;
     }
     if ((SelectedExperiment->Id == TEXT("amz_style") ||
-         SelectedExperiment->Id == TEXT("slam")) &&
+         SelectedExperiment->Id == TEXT("slam") ||
+         SelectedExperiment->Id == TEXT("slam_stanley")) &&
         SelectedLidar->Id == TEXT("off"))
     {
         return false;
@@ -1040,6 +1115,12 @@ bool SBenchmarkMenu::CanPrepare() const
 FReply SBenchmarkMenu::HandleConnectBridge()
 {
     OnConnectBridge.ExecuteIfBound();
+    return FReply::Handled();
+}
+
+FReply SBenchmarkMenu::HandleToggleManualDrive()
+{
+    OnToggleManualDrive.ExecuteIfBound();
     return FReply::Handled();
 }
 
@@ -1072,10 +1153,24 @@ FReply SBenchmarkMenu::HandleClose()
 
 void SBenchmarkMenu::SetBridgeStatus(const FText& Status, const FLinearColor& Color)
 {
+    IsBridgeRunning = Status.EqualTo(FText::FromString(TEXT("RUNNING")));
     if (BridgeStatusText.IsValid())
     {
         BridgeStatusText->SetText(Status);
         BridgeStatusText->SetColorAndOpacity(Color);
+    }
+}
+
+void SBenchmarkMenu::SetManualDriveStatus(
+    const FText& Status,
+    const FLinearColor& Color,
+    bool IsRunning)
+{
+    IsManualDriveRunning = IsRunning;
+    if (ManualDriveStatusText.IsValid())
+    {
+        ManualDriveStatusText->SetText(Status);
+        ManualDriveStatusText->SetColorAndOpacity(Color);
     }
 }
 

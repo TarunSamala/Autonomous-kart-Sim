@@ -6,6 +6,7 @@
   <arg name="enabled" default="false"/>
   <arg name="use_vio" default="false"/>
   <arg name="target_laps" default="1"/>
+  <arg name="controller_type" default="pure_pursuit"/>
   <arg name="minimum_lap_distance_m" default="100.0"/>
 
   <include file="$(find-pkg-share autonomy)/launch/fsds_slam_trackdrive.launch.xml">
@@ -13,6 +14,7 @@
     <arg name="use_vio" value="$(var use_vio)"/>
     <arg name="map_file" value="$(var map_file)"/>
     <arg name="route_file" value="$(var route_file)"/>
+    <arg name="controller_type" value="$(var controller_type)"/>
   </include>
 
   <node pkg="single_test" exec="single_test_session"

@@ -34,6 +34,7 @@ class SBenchmarkMenu : public SCompoundWidget
 public:
     SLATE_BEGIN_ARGS(SBenchmarkMenu) {}
         SLATE_EVENT(FSimpleDelegate, OnConnectBridge)
+        SLATE_EVENT(FSimpleDelegate, OnToggleManualDrive)
         SLATE_EVENT(FOnPrepareBenchmark, OnPrepareBenchmark)
         SLATE_EVENT(FSimpleDelegate, OnClose)
     SLATE_END_ARGS()
@@ -41,6 +42,10 @@ public:
     void Construct(const FArguments& InArgs);
 
     void SetBridgeStatus(const FText& Status, const FLinearColor& Color);
+    void SetManualDriveStatus(
+        const FText& Status,
+        const FLinearColor& Color,
+        bool IsRunning);
     void SetPreparationStatus(const FText& Status, const FLinearColor& Color);
 
 private:
@@ -81,9 +86,12 @@ private:
     FText GetDepthDescription() const;
     FText GetConfigurationState() const;
     FSlateColor GetConfigurationStateColor() const;
+    FText GetManualDriveButtonLabel() const;
+    bool CanToggleManualDrive() const;
     bool CanPrepare() const;
 
     FReply HandleConnectBridge();
+    FReply HandleToggleManualDrive();
     FReply HandlePrepareBenchmark();
     FReply HandleExperimentCardClicked(FProfileOptionPtr Option);
     FReply HandleClose();
@@ -99,13 +107,17 @@ private:
     TSharedPtr<class SComboBox<FProfileOptionPtr>> LidarComboBox;
     TSharedPtr<class SComboBox<FProfileOptionPtr>> DepthComboBox;
     TSharedPtr<STextBlock> BridgeStatusText;
+    TSharedPtr<STextBlock> ManualDriveStatusText;
     TSharedPtr<STextBlock> PreparationStatusText;
 
     FSimpleDelegate OnConnectBridge;
+    FSimpleDelegate OnToggleManualDrive;
     FOnPrepareBenchmark OnPrepareBenchmark;
     FSimpleDelegate OnClose;
 
     FButtonStyle PrimaryButtonStyle;
     FButtonStyle SecondaryButtonStyle;
     FButtonStyle GhostButtonStyle;
+    bool IsManualDriveRunning = false;
+    bool IsBridgeRunning = false;
 };

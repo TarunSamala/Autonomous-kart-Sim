@@ -45,6 +45,30 @@ TEST(Geometry, LookaheadAndCurvature)
   EXPECT_GT(autonomy::pure_pursuit_curvature(*target), 0.0);
 }
 
+TEST(Geometry, StanleyTracksLateralOffset)
+{
+  const auto steering = autonomy::stanley_steering_angle(
+    {{0.0, 1.0}, {5.0, 1.0}}, 2.0, 1.0, 0.5);
+  ASSERT_TRUE(steering.has_value());
+  EXPECT_GT(*steering, 0.0);
+  EXPECT_LT(*steering, 0.5);
+}
+
+TEST(Geometry, StanleyUsesPathHeading)
+{
+  const auto steering = autonomy::stanley_steering_angle(
+    {{0.0, 0.0}, {5.0, 1.0}}, 2.0, 1.0, 0.5);
+  ASSERT_TRUE(steering.has_value());
+  EXPECT_NEAR(*steering, std::atan2(1.0, 5.0), 1.0e-9);
+}
+
+TEST(Geometry, StanleyRejectsInvalidInput)
+{
+  EXPECT_FALSE(autonomy::stanley_steering_angle({{0.0, 0.0}}, 1.0, 1.0, 0.5));
+  EXPECT_FALSE(autonomy::stanley_steering_angle(
+    {{0.0, 0.0}, {1.0, 0.0}}, 1.0, 0.0, 0.5));
+}
+
 TEST(Geometry, DelaunayPlannerBuildsStraightCenterline)
 {
   autonomy::DelaunayPlannerOptions options;

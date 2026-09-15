@@ -1,0 +1,170 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
+  exec distrobox enter kart-ros2-humble -- "$script_path" "$@"
+fi
+
+workspace_root="${script_path:h:h}"
+map_directory="$workspace_root/generated/maps/TrainingMap"
+map_prefix="$map_directory/track_sensor"
+route_file="$map_directory/route_sensor_slam.json"
+
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
+source /opt/ros/humble/setup.zsh
+source "$workspace_root/install/setup.zsh"
+
+if ! nc -z -w 1 127.0.0.1 41451 >/dev/null 2>&1; then
+  print -u2 "single-test-teach: FSDS is not running on 127.0.0.1:41451"
+  print -u2 "Run 'single-test prepare slam', start FSDS, then retry."
+  exit 1
+fi
+
+publisher_count="$(ros2 topic info /fsds/control_command 2>/dev/null | awk '/Publisher count:/ {print $3}')"
+if [[ -n "$publisher_count" && "$publisher_count" != 0 ]]; then
+  print -u2 "single-test-teach: /fsds/control_command already has $publisher_count publisher(s)"
+  print -u2 "Stop every controller and teleop process before mapping."
+  exit 1
+fi
+
+mkdir -p "$map_directory"
+typeset -a previous_artifacts
+for candidate in "$map_prefix.posegraph" "$map_prefix.data" "$map_prefix.yaml" \
+  "$map_prefix.pgm" "$route_file"; do
+  [[ -f "$candidate" ]] && previous_artifacts+=("$candidate")
+done
+if (( ${#previous_artifacts} > 0 )); then
+  print "Existing validated map/route artifacts will be archived before recording:"
+  printf '  %s\n' "${previous_artifacts[@]}"
+  print -n "Type REPLACE to continue: "
+  read -r confirmation
+  if [[ "$confirmation" != "REPLACE" ]]; then
+    print "Cancelled; existing artifacts were not changed."
+    exit 0
+  fi
+  timestamp="$(date +%Y%m%d-%H%M%S)"
+  for artifact in "${previous_artifacts[@]}"; do
+    mv "$artifact" "$artifact.backup-$timestamp"
+  done
+  print "Previous artifacts archived with suffix .backup-$timestamp"
+fi
+
+bridge_pid=0
+mapping_pid=0
+recorder_pid=0
+teleop_pid=0
+owns_bridge=false
+
+cleanup()
+{
+  trap - INT TERM EXIT
+  for process_id in $teleop_pid $recorder_pid $mapping_pid; do
+    if (( process_id > 0 )) && kill -0 "$process_id" 2>/dev/null; then
+      kill -INT "$process_id" 2>/dev/null || true
+      wait "$process_id" 2>/dev/null || true
+    fi
+  done
+  if $owns_bridge && (( bridge_pid > 0 )) && kill -0 "$bridge_pid" 2>/dev/null; then
+    kill -INT "$bridge_pid" 2>/dev/null || true
+    wait "$bridge_pid" 2>/dev/null || true
+  fi
+}
+trap cleanup INT TERM EXIT
+
+if ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; then
+  print "[1/5] ROS bridge already connected"
+else
+  print "[1/5] Starting ROS bridge"
+  "$workspace_root/scripts/single-test-bridge" &
+  bridge_pid=$!
+  owns_bridge=true
+fi
+
+bridge_ready=false
+for _ in {1..40}; do
+  if ros2 node list 2>/dev/null | grep -qx '/fsds/ros_bridge'; then
+    bridge_ready=true
+    break
+  fi
+  if $owns_bridge && ! kill -0 "$bridge_pid" 2>/dev/null; then
+    break
+  fi
+  sleep 0.5
+done
+if ! $bridge_ready; then
+  print -u2 "single-test-teach: ROS bridge was not ready within 20 seconds"
+  exit 1
+fi
+
+print "[2/5] Starting SLAM Toolbox mapping"
+ros2 launch slam fsds_slam_mapping.launch.xml &
+mapping_pid=$!
+
+mapping_ready=false
+for _ in {1..60}; do
+  if ros2 service type /slam_toolbox/serialize_map >/dev/null 2>&1; then
+    mapping_ready=true
+    break
+  fi
+  if ! kill -0 "$mapping_pid" 2>/dev/null; then
+    break
+  fi
+  sleep 0.5
+done
+if ! $mapping_ready; then
+  print -u2 "single-test-teach: SLAM Toolbox was not ready within 30 seconds"
+  exit 1
+fi
+
+print "[3/5] Recording the localized route"
+ros2 run slam route_recorder --ros-args \
+  -p output_path:="$route_file" \
+  -p target_laps:=1 \
+  -p auto_start:=true &
+recorder_pid=$!
+
+print "[4/5] Starting keyboard control"
+print "Click the FSDS window. Press E to arm, then W/A/S/D to drive one complete lap."
+print "The vehicle will stop automatically after the lap is recorded."
+ros2 run teleop keyboard_teleop &
+teleop_pid=$!
+
+final_state=""
+while kill -0 "$recorder_pid" 2>/dev/null && kill -0 "$teleop_pid" 2>/dev/null; do
+  status_output="$(timeout 2 ros2 topic echo /slam/route_recorder/status \
+    --once --qos-reliability reliable --qos-durability transient_local 2>/dev/null || true)"
+  final_state="$(print -r -- "$status_output" | awk -F': ' '/^data:/ {gsub(/\047/, "", $2); print $2; exit}')"
+  if [[ "$final_state" == "COMPLETE" || "$final_state" == "FAILED" ]]; then
+    break
+  fi
+  sleep 0.5
+done
+
+if [[ "$final_state" != "COMPLETE" ]]; then
+  print -u2 "single-test-teach: mapping lap did not complete; no pose graph was installed"
+  exit 1
+fi
+
+# Stop manual command publication before writing the final graph.
+kill -INT "$teleop_pid" 2>/dev/null || true
+wait "$teleop_pid" 2>/dev/null || true
+teleop_pid=0
+sleep 1
+
+print "[5/5] Serializing optimized pose graph"
+ros2 service call /slam_toolbox/serialize_map \
+  slam_toolbox/srv/SerializePoseGraph "{filename: '$map_prefix'}"
+
+if [[ ! -s "$map_prefix.posegraph" || ! -s "$map_prefix.data" || ! -s "$route_file" ]]; then
+  print -u2 "single-test-teach: one or more output artifacts are missing or empty"
+  exit 1
+fi
+
+print "TEACH COMPLETE"
+print "Map:   $map_prefix"
+print "Route: $route_file"
+print "You can now run either:"
+print "  single-test launch slam"
+print "  single-test launch slam_stanley"

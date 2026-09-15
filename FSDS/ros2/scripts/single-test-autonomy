@@ -12,6 +12,12 @@ map_file="${1:-$workspace_root/generated/maps/TrainingMap/track_sensor}"
 route_file="${2:-$workspace_root/generated/maps/TrainingMap/route_sensor_slam.json}"
 manifest="${3:-$workspace_root/generated/single_test/slam_toolbox_trackdrive/manifest.json}"
 results_directory="${4:-$workspace_root/results}"
+controller_type="${5:-pure_pursuit}"
+
+if [[ "$controller_type" != "pure_pursuit" && "$controller_type" != "stanley" ]]; then
+  print -u2 "single-test-autonomy: controller must be pure_pursuit or stanley"
+  exit 2
+fi
 
 for required_file in "$map_file.posegraph" "$map_file.data" "$route_file" "$manifest"; do
   if [[ ! -f "$required_file" ]]; then
@@ -29,5 +35,6 @@ exec ros2 launch single_test slam_toolbox_trackdrive.launch.xml \
   route_file:="$route_file" \
   manifest:="$manifest" \
   results_directory:="$results_directory" \
+  controller_type:="$controller_type" \
   enabled:=false \
   use_vio:=false

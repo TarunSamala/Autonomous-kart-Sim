@@ -37,6 +37,7 @@ public:
   {
     enabled_ = declare_parameter<bool>("enabled", false);
     require_go_ = declare_parameter<bool>("require_go", true);
+    controller_type_ = declare_parameter<std::string>("controller_type", "pure_pursuit");
     lookahead_distance_ = declare_parameter<double>("lookahead_distance", 2.5);
     wheelbase_ = declare_parameter<double>("wheelbase", 1.55);
     max_steering_angle_ = declare_parameter<double>("max_steering_angle", 0.436332);
@@ -61,8 +62,11 @@ public:
     stop_after_laps_ = declare_parameter<int>("stop_after_laps", 1);
     minimum_lap_distance_m_ = declare_parameter<double>("minimum_lap_distance_m", 100.0);
     extra_info_timeout_ = declare_parameter<double>("extra_info_timeout", 2.0);
+    stanley_gain_ = declare_parameter<double>("stanley_gain", 1.0);
+    stanley_softening_speed_ = declare_parameter<double>("stanley_softening_speed", 0.5);
 
-    if (lookahead_distance_ <= 0.0 || wheelbase_ <= 0.0 ||
+    if ((controller_type_ != "pure_pursuit" && controller_type_ != "stanley") ||
+      lookahead_distance_ <= 0.0 || wheelbase_ <= 0.0 ||
       max_steering_angle_ <= 0.0 || launch_release_speed_ <= 0.0 ||
       corner_speed_ <= launch_release_speed_ || target_speed_ < corner_speed_ ||
       max_speed_ <= target_speed_ || full_corner_curvature_ <= 0.0 ||
@@ -71,10 +75,12 @@ public:
       path_timeout_ <= 0.0 ||
       speed_timeout_ <= 0.0 || go_timeout_ <= 0.0 || extra_info_timeout_ <= 0.0 ||
       stop_after_laps_ < 0 || minimum_lap_distance_m_ < 0.0 ||
+      !std::isfinite(stanley_gain_) || stanley_gain_ <= 0.0 ||
+      !std::isfinite(stanley_softening_speed_) || stanley_softening_speed_ <= 0.0 ||
       !unit(max_tracking_throttle_) || !unit(max_tracking_brake_) ||
       !unit(launch_throttle_) || !unit(overspeed_brake_))
     {
-      throw std::invalid_argument("invalid pure pursuit parameters");
+      throw std::invalid_argument("invalid path controller parameters");
     }
 
     path_sub_ = create_subscription<nav_msgs::msg::Path>(
@@ -133,8 +139,9 @@ public:
     set_status(enabled_ ? "WAITING_FOR_INPUTS" : "DISABLED");
     RCLCPP_INFO(
       get_logger(),
-      "C++ pure pursuit ready (%s); launch pulse %.2f throttle for %.2f s, release %.2f m/s",
-      enabled_ ? "ARMED" : "DISABLED", launch_throttle_, launch_pulse_duration_,
+      "C++ %s controller ready (%s); launch pulse %.2f throttle for %.2f s, release %.2f m/s",
+      controller_type_.c_str(), enabled_ ? "ARMED" : "DISABLED",
+      launch_throttle_, launch_pulse_duration_,
       launch_release_speed_);
   }
 
@@ -277,7 +284,17 @@ private:
       return;
     }
     const double curvature = autonomy::pure_pursuit_curvature(*target);
-    const double steering_angle = std::atan(wheelbase_ * curvature);
+    double steering_angle = std::atan(wheelbase_ * curvature);
+    if (controller_type_ == "stanley") {
+      const auto stanley_angle = autonomy::stanley_steering_angle(
+        path_, speed_, stanley_gain_, stanley_softening_speed_);
+      if (!stanley_angle.has_value()) {
+        set_status("NO_VALID_PATH_SEGMENT");
+        publish_stop();
+        return;
+      }
+      steering_angle = *stanley_angle;
+    }
     // FSDS uses negative steering for left; positive curvature means target-left.
     const double steering = std::clamp(
       -steering_angle / max_steering_angle_, -1.0, 1.0);
@@ -373,6 +390,7 @@ private:
 
   bool enabled_;
   bool require_go_;
+  std::string controller_type_;
   bool launch_complete_{false};
   bool stop_on_cone_contact_;
   bool stop_latched_{false};
@@ -399,6 +417,8 @@ private:
   double speed_timeout_;
   double go_timeout_;
   double extra_info_timeout_;
+  double stanley_gain_;
+  double stanley_softening_speed_;
   double speed_{0.0};
   double speed_integral_{0.0};
   double distance_since_lap_baseline_m_{0.0};

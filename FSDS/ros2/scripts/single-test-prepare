@@ -61,12 +61,15 @@ if [[ -n "$experiment" ]]; then
     slam)
       test_config="$workspace_root/src/single_test/config/slam_toolbox_trackdrive.yaml"
       ;;
+    slam_stanley)
+      test_config="$workspace_root/src/single_test/config/slam_toolbox_stanley.yaml"
+      ;;
     general_autonomy)
       test_config="$workspace_root/src/single_test/config/general_autonomy.yaml"
       ;;
     *)
       print -u2 "single-test-prepare: unknown experiment: $experiment"
-      print -u2 "valid experiments: amz_style, behavior_cloning, slam, general_autonomy"
+      print -u2 "valid experiments: amz_style, behavior_cloning, slam, slam_stanley, general_autonomy"
       exit 2
       ;;
   esac

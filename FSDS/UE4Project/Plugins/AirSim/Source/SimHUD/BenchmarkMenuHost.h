@@ -12,6 +12,7 @@ class AIRSIM_API UBenchmarkMenuHost : public UUserWidget
 public:
     void Configure(
         const FSimpleDelegate& InConnectBridge,
+        const FSimpleDelegate& InToggleManualDrive,
         const FOnPrepareBenchmark& InPrepareBenchmark,
         const FSimpleDelegate& InClose);
 
@@ -23,6 +24,7 @@ protected:
 
 private:
     FSimpleDelegate ConnectBridge;
+    FSimpleDelegate ToggleManualDrive;
     FOnPrepareBenchmark PrepareBenchmark;
     FSimpleDelegate Close;
     TSharedPtr<SBenchmarkMenu> BenchmarkMenu;

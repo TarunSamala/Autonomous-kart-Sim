@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081015"/>
+      <stop offset="0.55" stop-color="#0d171a"/>
+      <stop offset="1" stop-color="#05090b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="48%" cy="45%" r="62%">
+      <stop offset="0" stop-color="#2bd2d8" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#2bd2d8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity=".5"/>
+    </filter>
+    <style>
+      .title{font:600 23px 'Inter','Noto Sans',sans-serif;fill:#e7eceb;letter-spacing:.4px}
+      .sub{font:500 10px 'Inter','Noto Sans',sans-serif;fill:#818d8f;letter-spacing:1.3px}
+      .eyebrow{font:700 10px 'Inter','Noto Sans',sans-serif;fill:#78878a;letter-spacing:1.5px}
+      .label{font:600 14px 'Inter','Noto Sans',sans-serif;fill:#e1e7e6}
+      .small{font:400 11px 'Inter','Noto Sans',sans-serif;fill:#899598}
+      .tiny{font:600 9px 'Inter','Noto Sans',sans-serif;fill:#68777a;letter-spacing:1px}
+      .accent{fill:#3bd5d9}.success{fill:#49e18d}.warn{fill:#f3ad44}
+      .panel{fill:#081014;fill-opacity:.84;stroke:#718083;stroke-opacity:.18}
+      .card{fill:#111a1e;fill-opacity:.82;stroke:#738184;stroke-opacity:.24}
+      .selected{fill:#102326;stroke:#3bd5d9;stroke-width:2}
+      .button{fill:#142226;stroke:#738184;stroke-opacity:.4}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <path d="M0 710 C300 590 500 760 820 635 S1260 545 1600 680 L1600 900 L0 900Z" fill="#172224" opacity=".45"/>
+  <path d="M190 900 C420 690 680 670 910 900" fill="none" stroke="#2a383b" stroke-width="170" opacity=".28"/>
+  <path d="M190 900 C420 690 680 670 910 900" fill="none" stroke="#91a1a2" stroke-width="2" stroke-dasharray="14 18" opacity=".28"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <rect x="24" y="22" width="1552" height="856" rx="4" fill="#020608" fill-opacity=".63" stroke="#718083" stroke-opacity=".22" filter="url(#shadow)"/>
+
+  <g transform="translate(64 52)">
+    <rect x="0" y="1" width="5" height="45" fill="#3bd5d9"/>
+    <text x="20" y="23" class="title">DRIVERLESS  /  BENCHMARK</text>
+    <text x="20" y="42" class="sub">AUTONOMY PERFORMANCE LAB  ·  FORMULA STUDENT DRIVERLESS SIMULATOR</text>
+    <rect x="1245" y="5" width="190" height="32" rx="2" fill="#0b2528" stroke="#3bd5d9" stroke-opacity=".28"/>
+    <text x="1340" y="25" text-anchor="middle" class="tiny accent">SINGLE TEST / CONFIGURATION</text>
+    <text x="1480" y="25" class="tiny">CLOSE [F2]</text>
+  </g>
+  <line x1="54" y1="112" x2="1546" y2="112" stroke="#718083" stroke-opacity=".22"/>
+
+  <g transform="translate(54 136)">
+    <rect width="230" height="700" class="panel"/>
+    <text x="22" y="34" class="eyebrow">TEST MODE</text>
+    <rect x="16" y="52" width="198" height="72" rx="2" fill="#12373a" stroke="#3bd5d9" stroke-opacity=".25"/>
+    <text x="32" y="80" class="label">01   SINGLE TEST</text>
+    <text x="59" y="104" class="small accent">One vehicle / comparison</text>
+    <text x="22" y="168" class="eyebrow">AUTONOMY STACK</text>
+    <g transform="translate(18 188)">
+      <g><text x="0" y="14" class="tiny">01</text><text x="34" y="12" class="label">METHOD</text><text x="34" y="30" class="small">Select profile</text><text x="160" y="13" class="tiny accent">ACTIVE</text></g>
+      <g transform="translate(0 59)"><text x="0" y="14" class="tiny">02</text><text x="34" y="12" class="label">SENSORS</text><text x="34" y="30" class="small">Configure</text><text x="160" y="13" class="tiny accent">ACTIVE</text></g>
+      <g transform="translate(0 118)"><text x="0" y="14" class="tiny">03</text><text x="34" y="12" class="label">PROTOCOL</text><text x="34" y="30" class="small">Manifest</text><text x="146" y="13" class="tiny">RECORDED</text></g>
+      <g transform="translate(0 177)"><text x="0" y="14" class="tiny">04</text><text x="34" y="12" class="label">EXECUTION</text><text x="34" y="30" class="small">Safe arm</text><text x="148" y="13" class="tiny">TERMINAL</text></g>
+      <g transform="translate(0 236)"><text x="0" y="14" class="tiny">05</text><text x="34" y="12" class="label">RESULTS</text><text x="34" y="30" class="small">Metrics JSON</text><text x="146" y="13" class="tiny">RECORDED</text></g>
+    </g>
+    <rect x="16" y="625" width="198" height="54" rx="2" fill="#152025"/>
+    <text x="30" y="649" class="tiny">F2  TOGGLE MENU</text>
+    <text x="30" y="668" class="tiny">F1  FSDS HELP</text>
+  </g>
+
+  <g transform="translate(300 136)">
+    <rect width="835" height="700" class="panel"/>
+    <text x="32" y="43" class="title">Autonomy Experiment</text>
+    <text x="32" y="65" class="small">Choose a reproducible autonomy method and sensor contract.</text>
+    <rect x="30" y="88" width="775" height="58" class="card"/>
+    <text x="48" y="112" class="eyebrow">TEST ENVIRONMENT</text>
+    <text x="48" y="134" class="label">FSDS Training Track</text>
+    <text x="663" y="122" class="tiny success">RESEARCH PROTOCOL</text>
+    <text x="32" y="174" class="eyebrow">AUTONOMY PROFILE</text>
+
+    <g transform="translate(30 190)">
+      <rect width="379" height="92" rx="2" class="card"/>
+      <text x="16" y="20" class="tiny">MAPLESS</text><text x="319" y="20" class="tiny">SELECT</text>
+      <text x="16" y="48" class="label">AMZ-Style Cone Planning</text><text x="16" y="70" class="small">LiDAR · Delaunay · Pure Pursuit</text>
+      <rect x="395" width="379" height="92" rx="2" class="card"/>
+      <text x="411" y="20" class="tiny">LEARNED</text><text x="714" y="20" class="tiny">SELECT</text>
+      <text x="411" y="48" class="label">Behavior Cloning</text><text x="411" y="70" class="small">RGB-D policy · C++ inference</text>
+
+      <rect y="106" width="379" height="92" rx="2" class="selected"/>
+      <text x="16" y="126" class="tiny accent">MAPPED</text><text x="307" y="126" class="tiny accent">SELECTED</text>
+      <text x="16" y="154" class="label">SLAM Toolbox Track Drive</text><text x="16" y="176" class="small">Pose graph · route · Pure Pursuit</text>
+      <rect x="395" y="106" width="379" height="92" rx="2" class="card"/>
+      <text x="411" y="126" class="tiny">MAPPED</text><text x="714" y="126" class="tiny">SELECT</text>
+      <text x="411" y="154" class="label">SLAM + Stanley Track Drive</text><text x="411" y="176" class="small">Same map and route · Stanley</text>
+
+      <rect y="212" width="379" height="92" rx="2" class="card"/>
+      <text x="16" y="232" class="tiny warn">ORACLE</text><text x="319" y="232" class="tiny">SELECT</text>
+      <text x="16" y="260" class="label">General Autonomy Baseline</text><text x="16" y="282" class="small">FSDS oracle · debug reference</text>
+      <rect x="395" y="212" width="379" height="92" rx="2" fill="#0a1114" stroke="#718083" stroke-opacity=".16"/>
+      <text x="411" y="244" class="eyebrow">MANUAL TEACH LAP</text>
+      <text x="411" y="268" class="small">Map once, close the loop, then repeat autonomously.</text>
+    </g>
+
+    <g transform="translate(30 512)">
+      <rect width="379" height="74" class="card"/><text x="16" y="22" class="tiny accent">RANGE SENSOR</text><text x="16" y="48" class="label">LiDAR</text><rect x="170" y="16" width="190" height="42" class="button"/><text x="185" y="42" class="small">SLAMTEC A3M1        ▾</text>
+      <rect x="395" width="379" height="74" class="card"/><text x="411" y="22" class="tiny accent">VISION SENSOR</text><text x="411" y="48" class="label">Depth Camera</text><rect x="565" y="16" width="190" height="42" class="button"/><text x="580" y="42" class="small">RealSense D455      ▾</text>
+      <rect y="602" width="774" height="52" transform="translate(0 -2)" rx="2" fill="#251b0d" stroke="#f3ad44" stroke-opacity=".22"/>
+      <text x="18" y="630" class="small warn">SIMULATION NOTE · Hardware noise, optics and transport latency are not yet modelled.</text>
+    </g>
+  </g>
+
+  <g transform="translate(1151 136)">
+    <rect width="395" height="700" class="panel"/>
+    <text x="28" y="43" class="title">Autonomy Benchmark</text>
+    <text x="28" y="70" class="small">Executable methods under one traceable protocol.</text>
+    <rect x="26" y="98" width="343" height="190" class="card"/>
+    <text x="44" y="124" class="eyebrow">SELECTED LOADOUT</text>
+    <text x="44" y="155" class="label accent">SLAM Toolbox Track Drive</text>
+    <text x="44" y="178" class="small">Pose graph · recorded route · Pure Pursuit</text>
+    <text x="44" y="211" class="label">SLAMTEC RPLIDAR A3M1</text>
+    <text x="44" y="235" class="label">Intel RealSense D455</text>
+    <line x1="44" y1="253" x2="351" y2="253" stroke="#718083" stroke-opacity=".3"/>
+    <text x="44" y="274" class="tiny success">READY TO PREPARE</text>
+
+    <text x="28" y="326" class="eyebrow">SIMULATOR CONNECTION</text>
+    <text x="28" y="351" class="label success">RUNNING</text>
+    <rect x="26" y="365" width="343" height="44" rx="2" class="button"/>
+    <text x="197" y="392" text-anchor="middle" class="tiny">CONNECT ROS 2</text>
+
+    <text x="28" y="449" class="eyebrow">MANUAL CONTROL</text>
+    <text x="28" y="474" class="label success">RUNNING / PRESS E TO ARM</text>
+    <rect x="26" y="488" width="343" height="44" rx="2" class="button"/>
+    <text x="197" y="515" text-anchor="middle" class="tiny">STOP MANUAL DRIVE</text>
+    <text x="28" y="553" class="small">W/A/S/D drive · Space emergency brake · Q stop</text>
+
+    <text x="28" y="614" class="tiny success">PROFILE READY / RESTART FSDS TO APPLY</text>
+    <rect x="26" y="630" width="343" height="48" rx="2" fill="#3bd5d9"/>
+    <text x="197" y="660" text-anchor="middle" style="font:700 11px 'Inter','Noto Sans',sans-serif;fill:#001013;letter-spacing:1px">APPLY &amp; PREPARE TEST</text>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+schema_version: 1
+
+test:
+  id: a3m1_d455_slam_toolbox_stanley
+  track: TrainingMap
+  max_duration_s: 900.0
+  operation: autonomy
+
+sensors:
+  lidar: a3m1
+  depth_camera: d455
+  chassis_imu: true
+
+algorithms:
+  odometry: sensor_odometry
+  slam: slam_toolbox_localization
+  planner: recorded_route
+  controller: stanley
+  filter: none
+
+artifacts:
+  map: generated/maps/TrainingMap/track_sensor
+  route: generated/maps/TrainingMap/route_sensor_slam.json
+
+research:
+  family: slam
+  protocol: map_localize_drive
+  reference: "Stanley: The robot that won the DARPA Grand Challenge"
+  hypothesis: "Stanley tracking on the same mapped route can improve lateral accuracy without cone contact."
+  independent_variables: [lidar_profile, localization_backend, controller, target_speed]
+  dependent_metrics: [completion, lap_time_s, cone_contacts, distance_m, localization_failures]
+  random_seed: 0
+  uses_privileged_simulation_data: false

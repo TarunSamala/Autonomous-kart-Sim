@@ -17,6 +17,7 @@ if [[ "$experiment" == "behavior_cloning" ]]; then
   exec "$workspace_root/scripts/behavior-cloning-benchmark-start"
 fi
 if [[ "$experiment" != "amz_style" && "$experiment" != "slam" &&
+      "$experiment" != "slam_stanley" &&
       "$experiment" != "general_autonomy" ]]; then
   print -u2 "single-test-arm: unknown experiment: $experiment"
   exit 2
