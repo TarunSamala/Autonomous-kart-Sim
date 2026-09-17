@@ -39,12 +39,17 @@ void SBenchmarkMenu::Construct(const FArguments& InArgs)
     OnConnectBridge = InArgs._OnConnectBridge;
     OnToggleManualDrive = InArgs._OnToggleManualDrive;
     OnPrepareBenchmark = InArgs._OnPrepareBenchmark;
+    OnLaunchProfileRviz = InArgs._OnLaunchProfileRviz;
     OnClose = InArgs._OnClose;
 
     ExperimentOptions = {
         MakeShared<FBenchmarkProfileOption>(
-            TEXT("amz_style"), TEXT("AMZ-Style Cone Planning"),
-            TEXT("LiDAR cones · Delaunay planner · Pure Pursuit"),
+            TEXT("amz_style"), TEXT("AMZ Teach & Repeat"),
+            TEXT("SLAM cone map · saved Delaunay centreline · Pure Pursuit"),
+            TEXT("MAPPED")),
+        MakeShared<FBenchmarkProfileOption>(
+            TEXT("delaunay_reactive"), TEXT("Reactive Delaunay"),
+            TEXT("Live LiDAR cones · local Delaunay planner · Pure Pursuit"),
             TEXT("MAPLESS")),
         MakeShared<FBenchmarkProfileOption>(
             TEXT("behavior_cloning"), TEXT("Behavior Cloning"),
@@ -577,6 +582,35 @@ TSharedRef<SWidget> SBenchmarkMenu::BuildSummaryPanel()
                         .ColorAndOpacity(BenchmarkTheme::Text)
                     ]
                 ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 18.0f, 0.0f, 6.0f)
+                [
+                    SNew(STextBlock)
+                    .Text(FText::FromString(TEXT("VISUALIZATION")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
+                    .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                ]
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SAssignNew(RvizStatusText, STextBlock)
+                    .Text(FText::FromString(TEXT("NOT OPEN")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+                    .ColorAndOpacity(BenchmarkTheme::TextMuted)
+                    .AutoWrapText(true)
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(&SecondaryButtonStyle)
+                    .HAlign(HAlign_Center)
+                    .ToolTipText(FText::FromString(TEXT("Open RViz with the layout for the selected experiment. Does not start or arm autonomy.")))
+                    .OnClicked(this, &SBenchmarkMenu::HandleLaunchRviz)
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromString(TEXT("OPEN PROFILE RVIZ")))
+                        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+                        .ColorAndOpacity(BenchmarkTheme::Text)
+                    ]
+                ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 20.0f, 0.0f, 6.0f)
                 [
                     SNew(STextBlock)
@@ -1066,6 +1100,7 @@ FText SBenchmarkMenu::GetConfigurationState() const
         return FText::FromString(TEXT("BEHAVIOR CLONING REQUIRES RGB-D"));
     }
     if ((SelectedExperiment->Id == TEXT("amz_style") ||
+         SelectedExperiment->Id == TEXT("delaunay_reactive") ||
          SelectedExperiment->Id == TEXT("slam") ||
          SelectedExperiment->Id == TEXT("slam_stanley")) &&
         SelectedLidar->Id == TEXT("off"))
@@ -1145,6 +1180,15 @@ FReply SBenchmarkMenu::HandlePrepareBenchmark()
     return FReply::Handled();
 }
 
+FReply SBenchmarkMenu::HandleLaunchRviz()
+{
+    if (SelectedExperiment.IsValid())
+    {
+        OnLaunchProfileRviz.ExecuteIfBound(SelectedExperiment->Id);
+    }
+    return FReply::Handled();
+}
+
 FReply SBenchmarkMenu::HandleClose()
 {
     OnClose.ExecuteIfBound();
@@ -1180,5 +1224,14 @@ void SBenchmarkMenu::SetPreparationStatus(const FText& Status, const FLinearColo
     {
         PreparationStatusText->SetText(Status);
         PreparationStatusText->SetColorAndOpacity(Color);
+    }
+}
+
+void SBenchmarkMenu::SetRvizStatus(const FText& Status, const FLinearColor& Color)
+{
+    if (RvizStatusText.IsValid())
+    {
+        RvizStatusText->SetText(Status);
+        RvizStatusText->SetColorAndOpacity(Color);
     }
 }

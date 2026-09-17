@@ -46,6 +46,7 @@ void ASimHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
     GetWorldTimerManager().ClearTimer(bridge_process_timer_);
     GetWorldTimerManager().ClearTimer(manual_drive_process_timer_);
     GetWorldTimerManager().ClearTimer(preparation_process_timer_);
+    GetWorldTimerManager().ClearTimer(rviz_process_timer_);
     removeBridgeControlWidget();
 
     if (screen_message_suppression_active_ && GEngine)
@@ -83,6 +84,16 @@ void ASimHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
         }
         FPlatformProcess::CloseProc(manual_drive_process_);
         manual_drive_process_.Reset();
+    }
+
+    if (rviz_process_.IsValid())
+    {
+        if (FPlatformProcess::IsProcRunning(rviz_process_))
+        {
+            FPlatformProcess::TerminateProc(rviz_process_, true);
+        }
+        FPlatformProcess::CloseProc(rviz_process_);
+        rviz_process_.Reset();
     }
 
     if (widget_)
@@ -174,6 +185,9 @@ void ASimHUD::createBridgeControlWidget()
         FOnPrepareBenchmark::CreateUObject(
             this,
             &ASimHUD::prepareSingleTest),
+        FOnLaunchProfileRviz::CreateUObject(
+            this,
+            &ASimHUD::launchProfileRviz),
         FSimpleDelegate::CreateUObject(
             this,
             &ASimHUD::inputEventToggleBenchmarkMenu));
@@ -638,6 +652,138 @@ void ASimHUD::updatePreparationProcessState()
     }
 
     GetWorldTimerManager().ClearTimer(preparation_process_timer_);
+}
+
+void ASimHUD::launchProfileRviz(const FString& experiment)
+{
+    if (rviz_process_.IsValid() && FPlatformProcess::IsProcRunning(rviz_process_))
+    {
+        if (active_rviz_profile_ == experiment)
+        {
+            setRvizStatus(
+                FText::FromString(TEXT("ALREADY OPEN")),
+                FLinearColor(0.84f, 0.83f, 0.79f));
+            return;
+        }
+        FPlatformProcess::TerminateProc(rviz_process_, true);
+        FPlatformProcess::CloseProc(rviz_process_);
+        rviz_process_.Reset();
+    }
+
+    if (rviz_process_.IsValid())
+    {
+        FPlatformProcess::CloseProc(rviz_process_);
+        rviz_process_.Reset();
+    }
+
+    const FString script_path = findRvizStartScript();
+    if (script_path.IsEmpty())
+    {
+        setRvizStatus(
+            FText::FromString(TEXT("RVIZ SCRIPT NOT FOUND")),
+            FLinearColor(0.96f, 0.45f, 0.14f));
+        return;
+    }
+
+    setRvizStatus(
+        FText::FromString(TEXT("STARTING PROFILE...")),
+        FLinearColor(0.82f, 0.35f, 0.08f));
+    uint32 process_id = 0;
+    rviz_process_ = FPlatformProcess::CreateProc(
+        *script_path,
+        *experiment,
+        false,
+        false,
+        false,
+        &process_id,
+        0,
+        nullptr,
+        nullptr);
+
+    if (!rviz_process_.IsValid())
+    {
+        setRvizStatus(
+            FText::FromString(TEXT("FAILED TO START")),
+            FLinearColor(0.96f, 0.45f, 0.14f));
+        return;
+    }
+
+    rviz_process_was_running_ = true;
+    active_rviz_profile_ = experiment;
+    GetWorldTimerManager().SetTimer(
+        rviz_process_timer_,
+        this,
+        &ASimHUD::updateRvizProcessState,
+        0.5f,
+        true);
+    updateRvizProcessState();
+}
+
+FString ASimHUD::findRvizStartScript() const
+{
+    const FString configured_path = FPlatformMisc::GetEnvironmentVariable(
+        TEXT("FSDS_RVIZ_START_SCRIPT"));
+    const TArray<FString> candidates = {
+        configured_path,
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::ProjectDir(), TEXT("../ros2/scripts/single-test-visualize"))),
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::LaunchDir(), TEXT("ros2/scripts/single-test-visualize"))),
+        FPaths::ConvertRelativePathToFull(
+            FPaths::Combine(FPaths::LaunchDir(), TEXT("../ros2/scripts/single-test-visualize")))
+    };
+    for (const FString& candidate : candidates)
+    {
+        if (!candidate.IsEmpty() && FPaths::FileExists(candidate))
+        {
+            return candidate;
+        }
+    }
+    return FString();
+}
+
+void ASimHUD::updateRvizProcessState()
+{
+    const bool is_running = rviz_process_.IsValid()
+        && FPlatformProcess::IsProcRunning(rviz_process_);
+    if (is_running)
+    {
+        rviz_process_was_running_ = true;
+        setRvizStatus(
+            FText::FromString(TEXT("OPEN / SELECTED PROFILE")),
+            FLinearColor(0.84f, 0.83f, 0.79f));
+        return;
+    }
+
+    if (rviz_process_was_running_)
+    {
+        int32 return_code = -1;
+        const bool has_return_code = rviz_process_.IsValid()
+            && FPlatformProcess::GetProcReturnCode(rviz_process_, &return_code);
+        setRvizStatus(
+            has_return_code && return_code == 0
+                ? FText::FromString(TEXT("CLOSED"))
+                : FText::FromString(TEXT("STOPPED / CHECK ROS LOG")),
+            has_return_code && return_code == 0
+                ? FLinearColor(0.55f, 0.54f, 0.51f)
+                : FLinearColor(0.96f, 0.45f, 0.14f));
+        rviz_process_was_running_ = false;
+        active_rviz_profile_.Empty();
+    }
+    if (rviz_process_.IsValid())
+    {
+        FPlatformProcess::CloseProc(rviz_process_);
+        rviz_process_.Reset();
+    }
+    GetWorldTimerManager().ClearTimer(rviz_process_timer_);
+}
+
+void ASimHUD::setRvizStatus(const FText& status, const FLinearColor& color)
+{
+    if (benchmark_menu_.IsValid())
+    {
+        benchmark_menu_->SetRvizStatus(status, color);
+    }
 }
 
 void ASimHUD::setBenchmarkMenuVisible(bool visible)

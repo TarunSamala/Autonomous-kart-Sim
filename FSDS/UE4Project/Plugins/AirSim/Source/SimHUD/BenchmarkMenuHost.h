@@ -14,6 +14,7 @@ public:
         const FSimpleDelegate& InConnectBridge,
         const FSimpleDelegate& InToggleManualDrive,
         const FOnPrepareBenchmark& InPrepareBenchmark,
+        const FOnLaunchProfileRviz& InLaunchProfileRviz,
         const FSimpleDelegate& InClose);
 
     TSharedPtr<SBenchmarkMenu> GetBenchmarkMenu() const;
@@ -26,6 +27,7 @@ private:
     FSimpleDelegate ConnectBridge;
     FSimpleDelegate ToggleManualDrive;
     FOnPrepareBenchmark PrepareBenchmark;
+    FOnLaunchProfileRviz LaunchProfileRviz;
     FSimpleDelegate Close;
     TSharedPtr<SBenchmarkMenu> BenchmarkMenu;
 };
