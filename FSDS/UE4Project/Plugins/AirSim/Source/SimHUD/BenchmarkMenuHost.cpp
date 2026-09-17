@@ -4,11 +4,13 @@ void UBenchmarkMenuHost::Configure(
     const FSimpleDelegate& InConnectBridge,
     const FSimpleDelegate& InToggleManualDrive,
     const FOnPrepareBenchmark& InPrepareBenchmark,
+    const FOnLaunchProfileRviz& InLaunchProfileRviz,
     const FSimpleDelegate& InClose)
 {
     ConnectBridge = InConnectBridge;
     ToggleManualDrive = InToggleManualDrive;
     PrepareBenchmark = InPrepareBenchmark;
+    LaunchProfileRviz = InLaunchProfileRviz;
     Close = InClose;
 }
 
@@ -18,6 +20,7 @@ TSharedRef<SWidget> UBenchmarkMenuHost::RebuildWidget()
         .OnConnectBridge(ConnectBridge)
         .OnToggleManualDrive(ToggleManualDrive)
         .OnPrepareBenchmark(PrepareBenchmark)
+        .OnLaunchProfileRviz(LaunchProfileRviz)
         .OnClose(Close);
 
     return BenchmarkMenu.ToSharedRef();

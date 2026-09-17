@@ -8,7 +8,39 @@ if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
 fi
 
 workspace_root="${script_path:h:h}"
+profile="sensors"
+if (( $# > 0 )) && [[ "$1" != *:=* && "$1" != --* ]]; then
+  profile="$1"
+  shift
+fi
+
+unset COLCON_CURRENT_PREFIX COLCON_PREFIX_PATH AMENT_PREFIX_PATH CMAKE_PREFIX_PATH
 source /opt/ros/humble/setup.zsh
+if [[ ! -f "$workspace_root/install/setup.zsh" ]]; then
+  print -u2 "single-test-visualize: workspace is not built"
+  exit 1
+fi
 source "$workspace_root/install/setup.zsh"
 
-exec ros2 launch single_test sensors.launch.xml "$@"
+case "$profile" in
+  behavior_cloning|sensors)
+    exec ros2 launch single_test sensors.launch.xml "$@"
+    ;;
+  amz_style|slam|slam_stanley)
+    exec rviz2 -d "$workspace_root/install/autonomy/share/autonomy/config/amz_teach.rviz" "$@"
+    ;;
+  delaunay_reactive)
+    exec rviz2 -d "$workspace_root/install/autonomy/share/autonomy/config/delaunay_planner.rviz" "$@"
+    ;;
+  general_autonomy)
+    exec rviz2 -d "$workspace_root/install/autonomy/share/autonomy/config/general_autonomy.rviz" "$@"
+    ;;
+  vslam)
+    exec rviz2 -d "$workspace_root/install/vslam/share/vslam/config/fsds_vslam.rviz" "$@"
+    ;;
+  *)
+    print -u2 "single-test-visualize: unknown profile: $profile"
+    print -u2 "valid profiles: amz_style, delaunay_reactive, behavior_cloning, slam, slam_stanley, general_autonomy, vslam, sensors"
+    exit 2
+    ;;
+esac

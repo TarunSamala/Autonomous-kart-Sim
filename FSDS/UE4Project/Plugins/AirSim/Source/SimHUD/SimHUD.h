@@ -66,6 +66,10 @@ private:
         const FString& depth_profile);
     FString findSingleTestPrepareScript() const;
     void updatePreparationProcessState();
+    void launchProfileRviz(const FString& experiment);
+    FString findRvizStartScript() const;
+    void updateRvizProcessState();
+    void setRvizStatus(const FText& status, const FLinearColor& color);
     void setBenchmarkMenuVisible(bool visible);
     
 private:
@@ -87,6 +91,10 @@ private:
     FTimerHandle preparation_process_timer_;
     bool preparation_process_was_running_ = false;
     double preparation_started_at_seconds_ = 0.0;
+    FProcHandle rviz_process_;
+    FTimerHandle rviz_process_timer_;
+    bool rviz_process_was_running_ = false;
+    FString active_rviz_profile_;
     bool benchmark_menu_visible_ = true;
     bool screen_message_suppression_active_ = false;
     bool screen_messages_were_enabled_ = true;

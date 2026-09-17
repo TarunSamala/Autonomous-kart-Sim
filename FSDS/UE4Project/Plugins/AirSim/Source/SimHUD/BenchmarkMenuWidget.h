@@ -2,8 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/Input/SComboBox.h"
 
-class SComboBoxBase;
 class STextBlock;
 
 DECLARE_DELEGATE_ThreeParams(
@@ -11,6 +11,7 @@ DECLARE_DELEGATE_ThreeParams(
     const FString&,
     const FString&,
     const FString&);
+DECLARE_DELEGATE_OneParam(FOnLaunchProfileRviz, const FString&);
 
 struct FBenchmarkProfileOption
 {
@@ -36,6 +37,7 @@ public:
         SLATE_EVENT(FSimpleDelegate, OnConnectBridge)
         SLATE_EVENT(FSimpleDelegate, OnToggleManualDrive)
         SLATE_EVENT(FOnPrepareBenchmark, OnPrepareBenchmark)
+        SLATE_EVENT(FOnLaunchProfileRviz, OnLaunchProfileRviz)
         SLATE_EVENT(FSimpleDelegate, OnClose)
     SLATE_END_ARGS()
 
@@ -47,6 +49,7 @@ public:
         const FLinearColor& Color,
         bool IsRunning);
     void SetPreparationStatus(const FText& Status, const FLinearColor& Color);
+    void SetRvizStatus(const FText& Status, const FLinearColor& Color);
 
 private:
     typedef TSharedPtr<FBenchmarkProfileOption> FProfileOptionPtr;
@@ -63,7 +66,7 @@ private:
         const FText& Description,
         const TArray<FProfileOptionPtr>* Options,
         FProfileOptionPtr* Selected,
-        TSharedPtr<class SComboBox<FProfileOptionPtr>>* ComboBox);
+        TSharedPtr<SComboBox<FProfileOptionPtr>>* ComboBox);
     TSharedRef<SWidget> BuildStackRow(
         const FText& Index,
         const FText& Label,
@@ -93,6 +96,7 @@ private:
     FReply HandleConnectBridge();
     FReply HandleToggleManualDrive();
     FReply HandlePrepareBenchmark();
+    FReply HandleLaunchRviz();
     FReply HandleExperimentCardClicked(FProfileOptionPtr Option);
     FReply HandleClose();
 
@@ -104,15 +108,17 @@ private:
     FProfileOptionPtr SelectedLidar;
     FProfileOptionPtr SelectedDepth;
 
-    TSharedPtr<class SComboBox<FProfileOptionPtr>> LidarComboBox;
-    TSharedPtr<class SComboBox<FProfileOptionPtr>> DepthComboBox;
+    TSharedPtr<SComboBox<FProfileOptionPtr>> LidarComboBox;
+    TSharedPtr<SComboBox<FProfileOptionPtr>> DepthComboBox;
     TSharedPtr<STextBlock> BridgeStatusText;
     TSharedPtr<STextBlock> ManualDriveStatusText;
     TSharedPtr<STextBlock> PreparationStatusText;
+    TSharedPtr<STextBlock> RvizStatusText;
 
     FSimpleDelegate OnConnectBridge;
     FSimpleDelegate OnToggleManualDrive;
     FOnPrepareBenchmark OnPrepareBenchmark;
+    FOnLaunchProfileRviz OnLaunchProfileRviz;
     FSimpleDelegate OnClose;
 
     FButtonStyle PrimaryButtonStyle;

@@ -34,7 +34,7 @@ case "$action" in
     exec "$workspace_root/scripts/single-test-disarm"
     ;;
   visualize|rviz)
-    exec "$workspace_root/scripts/single-test-visualize"
+    exec "$workspace_root/scripts/single-test-visualize" "$experiment"
     ;;
   check|status)
     if [[ ! -f /run/.containerenv && ! -f /.dockerenv ]]; then
@@ -75,7 +75,7 @@ case "$action" in
     print "  check     Check settings, FSDS RPC, bridge and core topics"
     print "  arm       Arm an already-running stack"
     print "  stop      Disarm and stop result recording"
-    print "  rviz      Open the sensor visualization"
+    print "  rviz      Open RViz using the selected experiment layout"
     print ""
     print "experiments: amz_style, delaunay_reactive, behavior_cloning, slam, slam_stanley, general_autonomy"
     print "example:"

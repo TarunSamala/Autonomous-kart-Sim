@@ -1,4 +1,5 @@
 fsds-v2.2.0-linux/
+FSDS/packaged/
 
 # ROS 2 / colcon generated output
 **/build/

@@ -89,6 +89,12 @@ view. Disable parts of the launch when needed:
 ```zsh
 scripts/single-test-visualize point_cloud:=false
 scripts/single-test-visualize rviz:=false
+
+# Open the layout associated with an experiment profile:
+scripts/single-test-visualize amz_style
+scripts/single-test-visualize delaunay_reactive
+scripts/single-test-visualize behavior_cloning
+scripts/single-test-visualize general_autonomy
 ```
 
 If a selected sensor is `off`, its preconfigured RViz display simply reports
