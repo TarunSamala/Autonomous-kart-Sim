@@ -1,0 +1,86 @@
+#!/usr/bin/env zsh
+
+set -e
+
+script_path="${0:A}"
+fsds_root="${script_path:h:h}"
+repository_root="${fsds_root:h}"
+project_file="$fsds_root/UE4Project/FSOnline.uproject"
+unreal_root="${UE4_ROOT:-${repository_root:h}/UnrealEngine}"
+run_uat="$unreal_root/Engine/Build/BatchFiles/RunUAT.sh"
+archive_root="${FSDS_PACKAGE_OUTPUT:-$fsds_root/packaged}"
+configuration="Development"
+
+if (( $# > 0 )); then
+  case "$1" in
+    --shipping)
+      configuration="Shipping"
+      shift
+      ;;
+    --development)
+      shift
+      ;;
+    -h|--help)
+      print "usage: FSDS/scripts/fsds-package [--development|--shipping]"
+      print ""
+      print "Builds a normal standalone Linux simulator at:"
+      print "  $archive_root/LinuxNoEditor"
+      exit 0
+      ;;
+    *)
+      print -u2 "fsds-package: unknown option: $1"
+      exit 2
+      ;;
+  esac
+fi
+if (( $# > 0 )); then
+  print -u2 "fsds-package: unexpected arguments: $*"
+  exit 2
+fi
+
+if [[ ! -x "$run_uat" ]]; then
+  print -u2 "fsds-package: RunUAT is not executable: $run_uat"
+  print -u2 "Set UE4_ROOT to the Unreal Engine checkout."
+  exit 1
+fi
+if [[ ! -f "$project_file" ]]; then
+  print -u2 "fsds-package: project not found: $project_file"
+  exit 1
+fi
+
+mkdir -p "$archive_root"
+print "Packaging FSDS ($configuration)"
+print "  project: $project_file"
+print "  output:  $archive_root/LinuxNoEditor"
+
+"$run_uat" BuildCookRun \
+  -project="$project_file" \
+  -noP4 \
+  -unattended \
+  -utf8output \
+  -platform=Linux \
+  -clientconfig="$configuration" \
+  -build \
+  -cook \
+  -map=/AirSim/MainMenuLevel+/Game/TrainingMap \
+  -stage \
+  -pak \
+  -compressed \
+  -archive \
+  -archivedirectory="$archive_root"
+
+package_root="$archive_root/LinuxNoEditor"
+game_binary="$package_root/FSOnline/Binaries/Linux/Blocks"
+if [[ ! -f "$game_binary" ]]; then
+  print -u2 "fsds-package: package completed without expected binary: $game_binary"
+  exit 1
+fi
+
+chmod +x "$game_binary"
+cp -p "$repository_root/FSDS.sh" "$package_root/FSDS.sh"
+chmod +x "$package_root/FSDS.sh"
+
+print ""
+print "Standalone simulator ready. Start it with either:"
+print "  $repository_root/FSDS.sh"
+print "  $package_root/FSDS.sh"

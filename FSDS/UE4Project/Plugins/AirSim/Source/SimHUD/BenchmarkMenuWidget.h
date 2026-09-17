@@ -2,8 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/Input/SComboBox.h"
 
-class SComboBoxBase;
 class STextBlock;
 
 DECLARE_DELEGATE_ThreeParams(
@@ -66,7 +66,7 @@ private:
         const FText& Description,
         const TArray<FProfileOptionPtr>* Options,
         FProfileOptionPtr* Selected,
-        TSharedPtr<class SComboBox<FProfileOptionPtr>>* ComboBox);
+        TSharedPtr<SComboBox<FProfileOptionPtr>>* ComboBox);
     TSharedRef<SWidget> BuildStackRow(
         const FText& Index,
         const FText& Label,
@@ -108,8 +108,8 @@ private:
     FProfileOptionPtr SelectedLidar;
     FProfileOptionPtr SelectedDepth;
 
-    TSharedPtr<class SComboBox<FProfileOptionPtr>> LidarComboBox;
-    TSharedPtr<class SComboBox<FProfileOptionPtr>> DepthComboBox;
+    TSharedPtr<SComboBox<FProfileOptionPtr>> LidarComboBox;
+    TSharedPtr<SComboBox<FProfileOptionPtr>> DepthComboBox;
     TSharedPtr<STextBlock> BridgeStatusText;
     TSharedPtr<STextBlock> ManualDriveStatusText;
     TSharedPtr<STextBlock> PreparationStatusText;
