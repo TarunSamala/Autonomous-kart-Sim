@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoKart - Simulation, Autonomy & Benchmark Development Report</title>
+<meta name="author" content="AutoKart Autonomous Systems Project Team">
+<style>
+@page { size: A4; margin: 0.68in 0.68in 0.65in; }
+* { box-sizing: border-box; }
+body { font-family: Georgia, "Liberation Serif", serif; color: #17212b; font-size: 9.25pt; line-height: 1.27; margin: 0; }
+h1 { color: #0a3558; font-size: 24pt; margin: 0 0 8px; border-bottom: 1.5px solid #2f6f9f; padding-bottom: 5px; }
+h2 { color: #0a3558; font-size: 15pt; margin: 15px 0 6px; border-bottom: 1px solid #2f6f9f; padding-bottom: 3px; }
+h3 { color: #0f466d; font-size: 11.5pt; margin: 10px 0 4px; }
+p { margin: 3px 0 7px; }
+ul, ol { margin: 4px 0 8px 18px; padding: 0; }
+li { margin: 2px 0; }
+.page { page-break-before: always; }
+.first { page-break-before: auto; }
+.header { text-align: right; color: #536574; font-size: 7.7pt; letter-spacing: 0.3px; margin-bottom: 24px; }
+.footer { color: #66727b; font-size: 7.5pt; text-align: center; margin-top: 16px; border-top: 0.5px solid #c4ced5; padding-top: 5px; }
+.title-main { color: #0a3558; font-size: 31pt; font-weight: bold; letter-spacing: 1px; margin-top: 36px; }
+.title-sub { color: #1e6287; font-size: 21pt; font-weight: bold; margin: 18px 0 10px; }
+.date { color: #52616e; font-size: 13pt; margin-bottom: 34px; }
+.box { background: #e6f0f5; border-left: 5px solid #1e6287; padding: 8px 10px; margin: 8px 0 11px; }
+.goodbox { background: #e6f3e9; border-left: 5px solid #3c8455; padding: 8px 10px; margin: 8px 0 11px; }
+.warnbox { background: #fff3d9; border-left: 5px solid #c48218; padding: 8px 10px; margin: 8px 0 11px; }
+.badbox { background: #f8e5e5; border-left: 5px solid #b94444; padding: 8px 10px; margin: 8px 0 11px; }
+.grid { width: 100%; border-collapse: collapse; margin: 6px 0 11px; page-break-inside: avoid; }
+.grid th { background: #235d86; color: white; text-align: left; font-weight: bold; padding: 5px 6px; border: 1px solid #244b65; }
+.grid td { padding: 4px 6px; border: 1px solid #9baab4; vertical-align: top; }
+.grid tr:nth-child(even) td { background: #f3f6f8; }
+.compact td, .compact th { padding: 3px 5px; font-size: 8.25pt; }
+.status-ok { color: #176637; font-weight: bold; }
+.status-open { color: #9a5a00; font-weight: bold; }
+.status-fail { color: #a12b2b; font-weight: bold; }
+.small { color: #52616e; font-size: 8.0pt; }
+.mono, code, pre { font-family: "Liberation Mono", "DejaVu Sans Mono", monospace; }
+pre { background: #f3f6f8; border: 1px solid #aebbc4; border-left: 5px solid #235d86; padding: 8px 10px; font-size: 7.7pt; line-height: 1.2; white-space: pre-wrap; margin: 6px 0 10px; page-break-inside: avoid; }
+pre.circuit { background: #fbfcfd; color: #102c40; font-size: 8.0pt; }
+.kicker { color: #52616e; font-size: 12pt; margin-bottom: 8px; }
+.two-col { width: 100%; border-collapse: separate; border-spacing: 10px; margin-top: 15px; }
+.two-col td { width: 50%; vertical-align: top; background: #f2f5f7; padding: 9px; }
+.metric { color: #0a3558; font-size: 13pt; font-weight: bold; }
+.figure { width: 100%; border: 1px solid #9baab4; margin: 7px 0 4px; }
+.caption { color: #52616e; font-size: 7.8pt; text-align: center; margin-bottom: 8px; }
+.bar { height: 9px; background: #dbe4ea; width: 100%; }
+.bar span { display: block; height: 9px; background: #2f6f9f; }
+</style>
+</head>
+<body>
+
+<div class="first">
+<div class="header">AUTOKART &nbsp;|&nbsp; SIMULATION, AUTONOMY &amp; BENCHMARKING</div>
+<div class="title-main">AUTOKART</div>
+<div class="title-sub">Simulation, Autonomy &amp; Benchmark Development Report</div>
+<div class="date">31 July 2026 - 28 September 2026<br><span class="small">Repository-grounded engineering status through commit 88e318a6</span></div>
+<div class="box"><b>Purpose</b><br>Consolidated record of the FSDS simulator integration, ROS 2 sensor and autonomy software, experiment orchestration, benchmark UI, behavior-cloning work, mapped autonomy, observed failures, corrective actions, validation evidence, and planned implementation.</div>
+<table class="two-col">
+<tr><td><span class="metric">Simulation platform</span><br>FSDS v2.2 source integrated<br>ROS 2 Humble bridge<br>Standalone LinuxNoEditor package</td><td><span class="metric">Sensors</span><br>LiDAR profiles and C++ processing<br>RGB/RGB-D depth profiles<br>IMU, TF and QoS adapters</td></tr>
+<tr><td><span class="metric">Autonomy</span><br>Pure Pursuit and Stanley<br>Delaunay cone planning<br>SLAM teach/localize/repeat</td><td><span class="metric">Research tooling</span><br>Immutable Single Test manifests<br>Behavior-cloning pipeline<br>In-simulator benchmark menu</td></tr>
+</table>
+<div class="warnbox"><b>Scope:</b> This report covers simulation and autonomy research software. Physical actuator firmware and electrical bench testing remain documented in the separate AutoKart RC development report used as this document's format reference.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; EXECUTIVE SUMMARY</div>
+<h1>Executive Summary</h1>
+<div class="kicker">Engineering status as of 28 September 2026</div>
+<p>The project has progressed from an FSDS checkout and manual ROS bridge bring-up into a substantial autonomy research platform. The current tree contains ten ROS 2 packages, 31 launch/operation scripts, 78 relevant source/configuration files, and approximately 9,093 lines of C++/Python source. It supports configurable sensor contracts, manual control, RGB-D visualization, VIO/VSLAM baselines, repeatable benchmark manifests, LiDAR cone planning, SLAM-based teach-and-repeat, and behavior-cloning data collection/inference infrastructure.</p>
+<div class="goodbox"><b>Confirmed progress</b><br>The canonical simulator and ROS settings are repository-local. LiDAR, RGB, metric depth, IMU and depth point-cloud topics have been observed. The standalone packaged simulator reaches TrainingMap, starts <span class="mono">AirSimGameMode</span>, and creates the native benchmark menu without Unreal Editor. Historical results include cone-free manual mapping laps and a cone-free SLAM Toolbox autonomous lap.</div>
+<div class="badbox"><b>Primary unresolved issues</b><br>No current trained behavior-cloning model exists. The current AMZ teach-and-repeat artifact set is incomplete: the active sensor pose graph, cone map and Delaunay centerline are missing even though a closed route is present. Existing general-autonomy and local Delaunay trials did not complete a lap. Multi-vehicle racing and real-kart synchronization are designs, not validated functions.</div>
+<h2>Current evidence boundary</h2>
+<ul>
+<li>A historical SLAM autonomous result completed one lap in 543.75 s with zero down/out cones; this proves termination, not competitive performance.</li>
+<li>Two manual mapping runs recorded laps near 456-460 s. The user-reported 44-50 s manual driving target is the performance reference, not the slow recorded runs.</li>
+<li>Behavior capture metadata reports 2,950 synchronized RGB/depth pairs with no write failures, but the CSV currently contains 2,900 samples; this mismatch must be resolved before training.</li>
+<li>The latest runtime smoke test verifies menu creation and absence of fatal/missing-package errors; it does not prove every button by automated click-through.</li>
+</ul>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; PURPOSE, SCOPE &amp; CLAIMS</div>
+<h1>Project Purpose &amp; Research Scope</h1>
+<p>The intended product is an autonomy benchmark tool analogous to a graphics benchmark: choose a sensor and algorithm configuration, execute the same track protocol, and compare completion, lap time, cone contact, speed, stability, and compute behavior under a traceable manifest.</p>
+<h2>Single Test</h2>
+<table class="grid compact"><tr><th>Choice family</th><th>Implemented or planned options</th><th>Measured output</th></tr>
+<tr><td>Sensors</td><td>A1M8, A3M1, FSDS 16-layer; HP60C, D415, D435, D455; combined LiDAR + RGB-D</td><td>Topic availability, rate, range contract, latency/freshness</td></tr>
+<tr><td>Localization / SLAM</td><td>Sensor odometry, RGB-D odometry, RTAB-Map, SLAM Toolbox mapping/localization</td><td>Loop return, map availability, localization continuity</td></tr>
+<tr><td>Planning</td><td>Reactive Delaunay, persistent mapped centerline, recorded route, behavior cloning, oracle debug baseline</td><td>Completion, path validity, interventions</td></tr>
+<tr><td>Control</td><td>Pure Pursuit, Stanley; PID/state-estimator package work remains</td><td>Lap time, speed, cross-track behavior, cone contact</td></tr>
+</table>
+<h2>Multi Test</h2>
+<p>The planned mode runs three or four vehicles with different profiles, observes them from top/spectator views, and evaluates lap performance, overtaking and collision avoidance. This requires multi-vehicle namespacing, spawn control, per-vehicle bridges, command arbitration and race-state scoring. It is not yet implemented.</p>
+<div class="warnbox"><b>Research claim rule:</b> <span class="mono">general_autonomy</span> consumes FSDS testing-only track and odometry topics. It is an oracle controller upper bound and debugging tool, not deployable autonomy. Sensor profiles reproduce externally visible data contracts, not full physical optics, sunlight response, projector behavior, USB timing or stereo physics.</div>
+<h2>Success definition</h2>
+<ol><li>Reproducible manifest and artifact hashes.</li><li>One publisher owns vehicle control.</li><li>Safe disabled start and stale-input braking.</li><li>Repeated complete laps, not a single anecdotal success.</li><li>Zero cone contacts and explicit failure reporting.</li><li>Fair comparisons under equal speed and stopping rules.</li></ol>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; SYSTEM ARCHITECTURE</div>
+<h1>Current Software Architecture</h1>
+<pre class="circuit">                         FSDS / Unreal Engine 4.27
+                                   |
+                    AirSim RPC 127.0.0.1:41451
+                                   |
+                         fsds_ros2_bridge
+                                   |
+       +-------------+-------------+-------------+-------------+
+       |             |                           |             |
+    LiDAR         RGB / depth                  IMU/GSS      Test telemetry
+       |             |                           |             |
+ cone detector   VIO / VSLAM / BC       sensor_odometry       |
+       |             |                           |             |
+ Delaunay / route / learned policy ---- localization ----------+
+                       |
+              Pure Pursuit / Stanley
+                       |
+             safety-gated control command
+                       |
+                  FSDS vehicle</pre>
+<h2>Benchmark control plane</h2>
+<pre class="circuit"> In-simulator UI or single-test command
+          |
+          +-- prepare profile -> generated settings + immutable manifest
+          +-- restart FSDS     -> selected sensor contract becomes active
+          +-- bridge           -> ROS graph and TF
+          +-- launch disabled  -> readiness inspection / RViz
+          +-- arm              -> motion + timing
+          +-- stop             -> brake, cleanup, JSON result</pre>
+<div class="goodbox"><b>Safety ownership:</b> Controllers start disabled. Missing or stale path, speed, camera or telemetry inputs command braking. Launch assist is bounded and disarms after timeout. The scripts reject concurrent publishers on <span class="mono">/fsds/control_command</span>.</div>
+<h2>Canonical repository rule</h2>
+<p>The only active checkout is <span class="mono">/home/satvara/Github/Autonomous-kart-Sim</span>. FSDS source is under <span class="mono">FSDS/</span>, ROS 2 work under <span class="mono">FSDS/ros2/</span>, and the authoritative active settings file is <span class="mono">FSDS/settings.json</span>.</p>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; DATED DEVELOPMENT TIMELINE I</div>
+<h1>Development Timeline</h1>
+<div class="kicker">Foundation through sensor and localization bring-up</div>
+<table class="grid compact"><tr><th>Date</th><th>Change / test</th><th>Evidence and engineering result</th></tr>
+<tr><td>31 Jul</td><td>Repository initialized.</td><td><span class="mono">5ceca7f7</span>; starting point for the simulator benchmark project.</td></tr>
+<tr><td>07 Aug</td><td>FSDS source, ROS 2 <span class="mono">fs_msgs</span> and bridge dependencies integrated.</td><td><span class="mono">db1df596</span>, <span class="mono">0d4114b9</span>, <span class="mono">134a7e5f</span>.</td></tr>
+<tr><td>08 Aug</td><td>AirSim math dependencies merged.</td><td><span class="mono">bb03f06b</span>, <span class="mono">d614d421</span>.</td></tr>
+<tr><td>09-11 Aug</td><td>Depth/RGB-D support, D455 profile, keyboard teleop, workspace relocation, VIO and VSLAM baselines.</td><td><span class="mono">3e18d82a</span> through <span class="mono">8c5978b7</span>. Camera, depth and odometry topics became operational.</td></tr>
+<tr><td>12 Aug</td><td>Teleop shortcut, VIO/RGB-D merge and RTAB-Map correction.</td><td><span class="mono">22c26c60</span>, <span class="mono">862940d4</span>, <span class="mono">db6c9ddf</span>.</td></tr>
+<tr><td>13 Aug</td><td>Initial simulation HUD test.</td><td><span class="mono">398c03aa</span>, merged as <span class="mono">4b60f1e7</span>.</td></tr>
+<tr><td>14 Aug</td><td>Autonomy tests and LiDAR logic converted to C++.</td><td><span class="mono">0c918218</span>, <span class="mono">9922c7c2</span>, <span class="mono">8087e8c8</span>.</td></tr>
+<tr><td>17 Aug</td><td>Single Test manifest and session infrastructure.</td><td><span class="mono">5346af0d</span>; reproducible settings/manifest/result contract introduced.</td></tr>
+</table>
+<div class="box"><b>Date interpretation:</b> Commit dates identify when software entered Git. Interactive simulator observations may have occurred before or after the commit on the same development day.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; DATED DEVELOPMENT TIMELINE II</div>
+<h1>Development Timeline</h1>
+<div class="kicker">Benchmarking, learned control, autonomy and packaging</div>
+<table class="grid compact"><tr><th>Date</th><th>Change / test</th><th>Evidence and engineering result</th></tr>
+<tr><td>19 Aug</td><td>Benchmark HUD iterations and UI patch.</td><td><span class="mono">b79e9c3b</span> through <span class="mono">a417b780</span>.</td></tr>
+<tr><td>20 Aug</td><td>Single Test autonomy passed software integration and sensor settings updated.</td><td><span class="mono">cc223e13</span>, <span class="mono">fa0298cb</span>, <span class="mono">6385f889</span>.</td></tr>
+<tr><td>24 Aug</td><td>Custom map and Single Test update.</td><td><span class="mono">9cf30e2c</span>; historical JSON run evidence preserved.</td></tr>
+<tr><td>28 Aug</td><td>Behavior-cloning collection, training/export and C++ inference pipeline added.</td><td><span class="mono">92185f51</span>, <span class="mono">b3cbbad5</span>.</td></tr>
+<tr><td>29 Aug</td><td>Local planner and autonomy baseline extended.</td><td><span class="mono">461c6180</span>, <span class="mono">2a2d32f8</span>.</td></tr>
+<tr><td>01-05 Sep</td><td>Repository-local settings, autonomy YAML, explicit arm/disarm and terminal launch consolidation.</td><td><span class="mono">157d97ed</span> through <span class="mono">a3e42483</span>.</td></tr>
+<tr><td>15 Sep</td><td>Autonomy benchmark UI, palette, general baseline, teach phase, persistent triangulation and working triangulation.</td><td><span class="mono">1263ea26</span> through <span class="mono">8813ff29</span>.</td></tr>
+<tr><td>17 Sep</td><td>RViz profile selection and normal standalone simulator package.</td><td><span class="mono">b3cfedcc</span>, <span class="mono">88e318a6</span>; packaged UI runtime smoke test passed.</td></tr>
+</table>
+<div class="goodbox"><b>Current Git state:</b> <span class="mono">Simulation-test</span> is aligned with <span class="mono">origin/Simulation-test</span> and the working tree was clean during preparation of this report.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; REPOSITORY ARCHITECTURE</div>
+<h1>ROS 2 Package Inventory</h1>
+<table class="grid compact"><tr><th>Package</th><th>Current role</th><th>Status</th></tr>
+<tr><td class="mono">fsds_ros2_bridge</td><td>AirSim RPC, sensors, vehicle commands, clock and TF.</td><td class="status-ok">Implemented</td></tr>
+<tr><td class="mono">single_test</td><td>Profile validation, settings generation, manifests, lifecycle and result JSON.</td><td class="status-ok">Implemented</td></tr>
+<tr><td class="mono">sensor_interface</td><td>Simulator/physical sensor adapters, currently IMU reframing.</td><td class="status-ok">Baseline</td></tr>
+<tr><td class="mono">teleop</td><td>C++ keyboard control with arm/brake/quit controls.</td><td class="status-ok">Implemented</td></tr>
+<tr><td class="mono">vio</td><td>RGB-D odometry and camera-frame IMU initialization contract.</td><td class="status-open">Baseline</td></tr>
+<tr><td class="mono">vslam</td><td>RTAB-Map RGB-D mapping and loop closure.</td><td class="status-open">Baseline</td></tr>
+<tr><td class="mono">slam</td><td>LaserScan conversion, sensor odometry, SLAM Toolbox and route recording.</td><td class="status-open">Implemented baseline</td></tr>
+<tr><td class="mono">autonomy</td><td>Cone detection, Delaunay planning, persistent map, route planning and controllers.</td><td class="status-open">Implemented baseline</td></tr>
+<tr><td class="mono">behavior_cloning</td><td>Demonstration capture, training/export, C++ inference and benchmark safety.</td><td class="status-open">Pipeline implemented</td></tr>
+<tr><td class="mono">fs_msgs</td><td>FSDS messages and services used by bridge and benchmark.</td><td class="status-ok">Implemented</td></tr>
+</table>
+<h2>Planned package separation</h2>
+<table class="grid compact"><tr><th>Package</th><th>Planned responsibility</th></tr><tr><td class="mono">interfaces</td><td>Common autonomy messages/services independent of FSDS.</td></tr><tr><td class="mono">state_estimator</td><td>Wheel odometry, chassis IMU and VIO fusion with covariance.</td></tr><tr><td class="mono">perception</td><td>Cones, obstacles and free-space estimation.</td></tr><tr><td class="mono">control</td><td>Controller plugins, command arbitration and real-vehicle interface.</td></tr></table>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; SIMULATOR &amp; ROS BRIDGE</div>
+<h1>FSDS Connection &amp; Bridge</h1>
+<h2>Validated connection path</h2>
+<pre>FSDS standalone/editor -> AirSim RPC :41451 -> fsds_ros2_bridge
+                                              |
+                         /fsds/lidar/Lidar1, RGB, depth, IMU, GSS,
+                         wheel states, signals, testing telemetry,
+                         /fsds/control_command and TF</pre>
+<p>The bridge was built for Ubuntu 22.04 / ROS 2 Humble in the <span class="mono">kart-ros2-humble</span> Distrobox. Connection was confirmed independently with <span class="mono">nc -vz 127.0.0.1 41451</span> and through the ROS topic graph.</p>
+<h2>Repository-owned launch contract</h2>
+<pre>cd /home/satvara/Github/Autonomous-kart-Sim
+./FSDS.sh
+
+# normal bridge / test entry points
+FSDS/ros2/scripts/bridge-start
+FSDS/ros2/scripts/single-test check</pre>
+<div class="goodbox"><b>Resolved configuration drift:</b> Both simulator and bridge use the same repository-local <span class="mono">FSDS/settings.json</span>. Generated profiles may override it deliberately, but duplicate home-directory FSDS clones and symlinks are no longer part of the supported workflow.</div>
+<h2>Observed operational topics</h2>
+<p class="mono">/clock, /fsds/cam1/*, /fsds/cam2/*, /fsds/control_command, /fsds/gps, /fsds/gss, /fsds/imu, /fsds/lidar/Lidar1, /fsds/lidar/Lidar2, /fsds/signal/go, /fsds/testing_only/odom, /fsds/testing_only/track, /fsds/wheel_states, /tf_static</p>
+<div class="warnbox"><b>Environment boundary:</b> Host and Distrobox shells must not source each other's generated setup paths. ROS commands run inside the Humble container; FSDS runs as the host graphical application and communicates over loopback.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; SENSOR PROFILES</div>
+<h1>Configurable Sensor Contracts</h1>
+<h2>LiDAR profiles</h2>
+<table class="grid compact"><tr><th>Profile</th><th>Range</th><th>Scan contract</th><th>Use</th></tr>
+<tr><td>A1M8</td><td>12 m</td><td>1 layer, 1,600 points, 5 Hz, 360 degrees</td><td>Low-cost 2D SLAM comparison</td></tr>
+<tr><td>A3M1</td><td>25 m</td><td>1 layer, 1,600 points, 10 Hz, 360 degrees</td><td>Mapped SLAM benchmark</td></tr>
+<tr><td>FSDS 16</td><td>100 m</td><td>16 layers, 4,096 firings, 10 Hz, forward 180 degrees</td><td>Dense development/autonomy profile</td></tr>
+</table>
+<h2>RGB-D profiles</h2>
+<table class="grid compact"><tr><th>Profile</th><th>Resolution / rate</th><th>FOV / range</th><th>Limit</th></tr>
+<tr><td>YDLIDAR HP60C</td><td>640x480 at 20 Hz</td><td>RGB 80.9°, depth 73.8°, 0.2-4.0 m</td><td>No physical structured-light noise/projector model</td></tr>
+<tr><td>RealSense D415</td><td>1280x720 at 30 Hz</td><td>RGB 69.4°, depth 65°, 0.16-10 m</td><td>No stereo/shutter artifact model</td></tr>
+<tr><td>RealSense D435</td><td>848x480 at 30 Hz</td><td>RGB 69°, depth 87°, 0.105-10 m</td><td>No physical baseline/projector behavior</td></tr>
+<tr><td>RealSense D455</td><td>848x480 at 30 Hz</td><td>RGB/depth 86°, 0.4-6.0 m, nominal 95 mm baseline</td><td>FSDS renders depth; baseline does not create disparity</td></tr>
+</table>
+<img class="figure" src="images/fsds_cam_view.png" alt="FSDS camera view">
+<div class="caption">FSDS camera rendering reference. Sensor profiles define benchmark contracts, not a full hardware digital twin.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; RGB-D, TF &amp; QOS</div>
+<h1>Depth Camera Integration</h1>
+<h2>Implemented processing</h2>
+<ul><li>Separate front RGB and metric depth captures with camera calibration topics.</li><li>Depth point-cloud conversion through <span class="mono">depth_image_proc</span>.</li><li>RGB/depth frame alignment and optical-frame TF correction.</li><li>Best Effort visualization QoS for simulator sensor publishers.</li><li>RViz layouts for generic sensors, behavior cloning, general autonomy and AMZ planning.</li></ul>
+<h2>Key transform</h2>
+<pre>fsds/FSCar -> fsds/front_rgb
+translation: [0.800, 0.000, 0.800]
+RPY: [-90 degrees, 0 degrees, -90 degrees]
+
+camera optical convention: +Z forward, +X right, +Y down
+vehicle convention:        +X forward, +Y left, +Z up</pre>
+<h2>Errors resolved</h2>
+<table class="grid compact"><tr><th>Symptom</th><th>Diagnosis</th><th>Resolution</th></tr>
+<tr><td>Depth image black/blank</td><td>Incorrect image capture/visual interpretation.</td><td>Use metric depth topic and appropriate RViz/Image display normalization.</td></tr>
+<tr><td>RGB and depth frame IDs differed</td><td>XYZRGB node requires registered frames.</td><td>Publish common optical frame for registered data.</td></tr>
+<tr><td>RViz received no point cloud</td><td>Reliability QoS incompatible.</td><td>Set RViz display to Best Effort / Sensor Data.</td></tr>
+<tr><td>Cloud appeared vertical/perpendicular</td><td>Optical-to-vehicle rotation missing/wrong.</td><td>Correct static TF and use vehicle/map fixed frame.</td></tr>
+</table>
+<div class="warnbox"><b>D455 limitation:</b> The FSDS chassis IMU can be republished in the camera frame for timing and gravity initialization, but it does not reproduce camera lever-arm acceleration or the D455's physical camera-mounted IMU.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; VIO &amp; VSLAM</div>
+<h1>Visual Odometry &amp; Mapping</h1>
+<h2>VIO baseline</h2>
+<p>The <span class="mono">vio</span> package launches synchronized RGB-D odometry and an IMU adapter, publishing <span class="mono">/localization/vio/odometry</span>. Recorded console evidence showed repeated RTAB-Map odometry updates with roughly 700-800 visual correspondences and approximately 0.10-0.13 s delay.</p>
+<div class="goodbox"><b>What this proves:</b> RGB-D feature tracking, synchronized depth and odometry publication operated in the simulator. It is a visual-inertial initialization baseline, not a final tightly coupled estimator.</div>
+<h2>VSLAM baseline</h2>
+<p>RTAB-Map receives RGB, depth, calibration, VIO odometry and IMU initialization. Loop-closure views and a 3D cloud were observed. Early 3D-map displays looked like dense planar cells because the depth cloud was being visualized without a useful persistent trajectory/map interpretation.</p>
+<pre>RGB + registered metric depth + camera_info
+                 |
+          rgbd_odometry + IMU init
+                 |
+          RTAB-Map graph / loop closure
+                 |
+            map -> vio/odom -> fsds/FSCar</pre>
+<h2>Remaining work</h2>
+<ul><li>Quantify drift against evaluation-only ground truth.</li><li>Run repeated loop closures and record graph corrections.</li><li>Separate mapping and localization trials.</li><li>Add a proper fused state estimator and calibrated covariance.</li><li>Validate the same frame/timestamp contract on the physical RGB-D camera.</li></ul>
+<div class="warnbox"><b>Interpretation rule:</b> A visually dense RTAB cloud is not by itself evidence of accurate localization. Map consistency, loop-closure residuals, trajectory error and repeatability must be measured.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; SLAM TOOLBOX</div>
+<h1>LiDAR SLAM &amp; Saved-Route Autonomy</h1>
+<pre class="circuit">/fsds/lidar/Lidar1 -> LaserScan -> SLAM Toolbox -> slam/map
+        IMU + GSS -> sensor_odometry -> sensor/odom -> fsds/FSCar
+saved route + localized pose -> route_planner -> Pure Pursuit / Stanley</pre>
+<h2>Implemented features</h2>
+<ul><li>Sensor-derived odometry avoids testing-only odometry in deployable pipelines.</li><li>Mapping and saved-graph localization launch modes.</li><li>C++ route recorder sampling at 0.40 m.</li><li>Geometric loop-return gate with minimum travel and heading agreement.</li><li>Pure Pursuit and Stanley profiles using the same map and route.</li><li>Pose-graph, occupancy map and route artifact checks before motion.</li></ul>
+<h2>Historical run evidence</h2>
+<table class="grid compact"><tr><th>Run</th><th>Outcome</th><th>Lap</th><th>Distance</th><th>Cones</th></tr>
+<tr><td>Manual mapping</td><td>Manual stop</td><td>456.16 s</td><td>504.11 m</td><td>0</td></tr>
+<tr><td>Manual mapping</td><td>Lap target</td><td>459.61 s</td><td>461.77 m</td><td>0</td></tr>
+<tr><td>SLAM Toolbox track drive</td><td>Lap target</td><td>543.75 s</td><td>543.63 m</td><td>0</td></tr>
+</table>
+<div class="badbox"><b>Performance warning:</b> The 543.75 s autonomous lap and 456-460 s mapping laps are not acceptable speed references when the manual track can be driven in roughly 44-50 s. They only show that the pipeline reached a lap event without cone contact.</div>
+<div class="warnbox"><b>Current artifact gate:</b> <span class="mono">route_sensor_slam.json</span> exists and is closed with 808 points, but the active <span class="mono">track_sensor.posegraph/.data/.pgm/.yaml</span> files are absent; only backups remain. Loaded-map autonomy must not start until the complete active artifact set is restored.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; AMZ-STYLE LOCAL PLANNING</div>
+<h1>Reactive Delaunay Autonomy</h1>
+<h2>Implemented algorithm</h2>
+<ol><li>Filter and cluster LiDAR returns into cone candidates.</li><li>Separate left/right boundaries.</li><li>Build Bowyer-Watson Delaunay triangulation.</li><li>Retain opposite-boundary edges inside valid track-width limits.</li><li>Use edge midpoints as centerline gates.</li><li>Connect gates sharing triangles and grow alternatives with beam search.</li><li>Score heading smoothness, width consistency, spacing, horizon and color ordering.</li><li>Publish selected path to the safety-gated controller.</li></ol>
+<pre>/fsds/lidar/Lidar1
+  -> cone_detector
+  -> /autonomy/cones/left + /autonomy/cones/right
+  -> local_planner
+  -> /autonomy/delaunay_midpoints + /autonomy/local_path
+  -> pure_pursuit
+  -> /fsds/control_command</pre>
+<h2>Visualization contract</h2>
+<table class="grid compact"><tr><th>Visualization</th><th>Meaning</th></tr><tr><td>Dark lines</td><td>Raw Delaunay triangulation.</td></tr><tr><td>Pale blue</td><td>Valid cross-track gates.</td></tr><tr><td>Green</td><td>Candidate centerlines explored by beam search.</td></tr><tr><td>Thick red</td><td>Lowest-cost candidate.</td></tr><tr><td>Magenta path</td><td>Smoothed path consumed by controller.</td></tr></table>
+<h2>Historical trial outcome</h2>
+<p>Three <span class="mono">delaunay_phase1</span> results ended by manual stop or 180 s time limit. Distances were 0-6.36 m; none completed a lap. These files are useful failure evidence but not proof of autonomous operation.</p>
+<div class="warnbox"><b>Fallback behavior:</b> If safe Delaunay gates are unavailable, the planner tries paired cones and then conservative single-boundary offset. If no method is safe, it publishes an empty path and the controller brakes.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; AMZ TEACH &amp; REPEAT</div>
+<h1>Persistent Cone Map &amp; Centreline</h1>
+<h2>Intended integrated sequence</h2>
+<ol><li>Prepare <span class="mono">amz_style</span> before FSDS starts.</li><li>Drive one or two manual laps with C++ keyboard control.</li><li>Transform cone observations and Delaunay midpoints into <span class="mono">slam/map</span>.</li><li>Associate persistent left/right landmarks while SLAM corrects pose.</li><li>Accept return only after travel distance, radius and heading gates pass.</li><li>Save pose graph, cone map, teaching route and ordered Delaunay centerline.</li><li>Stop teleop publication, launch localization, wait for readiness and arm replay.</li></ol>
+<pre>FSDS/ros2/scripts/single-test prepare amz_style
+# restart/start FSDS
+FSDS/ros2/scripts/single-test teach-run --laps 1
+
+# required replay artifacts
+track_sensor.posegraph + track_sensor.data
+track_sensor.pgm       + track_sensor.yaml
+cone_map.json          + centerline_delaunay.json
+route_sensor_slam.json</pre>
+<h2>Current repository evidence</h2>
+<table class="grid compact"><tr><th>Artifact</th><th>Current state</th></tr><tr><td>Closed sensor-SLAM teaching route</td><td class="status-ok">Present; 808 points, geometric loop closure.</td></tr><tr><td>Active sensor pose graph/map</td><td class="status-fail">Missing; timestamped backups exist.</td></tr><tr><td>Persistent cone map</td><td class="status-fail">Missing.</td></tr><tr><td>Delaunay centerline</td><td class="status-fail">Missing.</td></tr><tr><td>Autonomous replay result</td><td class="status-fail">Not demonstrated.</td></tr></table>
+<div class="badbox"><b>Current conclusion:</b> The teach-and-repeat code path is implemented, but the repository is not presently ready to launch loaded AMZ autonomy. A fresh, clean manual teaching lap must generate and validate all required artifacts first.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; BEHAVIOR CLONING</div>
+<h1>RGB / RGB-D Imitation Learning</h1>
+<img class="figure" src="images/behavior_cloning_sample.jpg" alt="Behavior cloning training frame">
+<div class="caption">Example frame from the current HP60C-style demonstration capture.</div>
+<h2>Implemented pipeline</h2>
+<table class="grid compact"><tr><th>Stage</th><th>Implementation</th></tr><tr><td>Collect</td><td>C++ synchronized RGB, metric depth, speed and expert command recorder.</td></tr><tr><td>Validate</td><td>Timestamp, range, resolution, encoding and file-existence checks.</td></tr><tr><td>Train</td><td>PyTorch RGB and RGB-D models; split by complete run, not adjacent frames.</td></tr><tr><td>Export</td><td>ONNX plus immutable preprocessing/model metadata.</td></tr><tr><td>Shadow</td><td>Publish prediction separately while expert retains control.</td></tr><tr><td>Drive</td><td>C++ OpenCV-DNN inference with stale-input brake, limits, launch assist and disabled start.</td></tr><tr><td>Benchmark</td><td>60 s limit, lap/cone stop and JSON result.</td></tr></table>
+<h2>Current dataset state</h2>
+<ul><li>One run directory exists.</li><li>2,950 RGB files and 2,950 depth files exist; metadata reports 2,950 samples and zero write failures.</li><li>The CSV has 2,900 data rows, creating a 50-sample accounting mismatch.</li><li>No trained <span class="mono">model.onnx</span> or <span class="mono">model.json</span> exists.</li></ul>
+<div class="badbox"><b>Training gate:</b> One run is insufficient for a defensible train/validation split. Resolve the count mismatch, collect at least 12 clean independent laps plus recovery demonstrations, reserve complete held-out runs, and validate in shadow mode before closed-loop control.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; SINGLE TEST BENCHMARK</div>
+<h1>Reproducible Experiment Framework</h1>
+<h2>Executable profiles</h2>
+<table class="grid compact"><tr><th>Profile</th><th>Pipeline</th><th>Claim boundary</th></tr>
+<tr><td>AMZ style</td><td>LiDAR cones -> Delaunay -> Pure Pursuit</td><td>Deployable local/mapped autonomy baseline.</td></tr>
+<tr><td>Behavior cloning</td><td>RGB-D + speed -> learned C++ policy</td><td>Requires held-out model and repeat trials.</td></tr>
+<tr><td>SLAM</td><td>SLAM Toolbox graph + recorded route -> Pure Pursuit</td><td>Sensor-derived mapped autonomy.</td></tr>
+<tr><td>SLAM + Stanley</td><td>Same graph/route -> Stanley</td><td>Controller comparison with identical artifacts.</td></tr>
+<tr><td>General autonomy</td><td>Testing-only track/odom -> Pure Pursuit</td><td>Privileged simulator oracle only.</td></tr>
+</table>
+<h2>Lifecycle contract</h2>
+<pre>single-test prepare PROFILE
+  -> validate YAML + sensor catalog
+  -> generate settings.json + immutable manifest
+  -> apply canonical FSDS/settings.json
+
+single-test launch PROFILE
+  -> bridge if required
+  -> stack starts DISABLED
+  -> readiness gates
+  -> operator confirmation
+  -> arm + time + record
+  -> stop/brake + result JSON</pre>
+<h2>Recorded metrics</h2>
+<p>Duration, integrated distance, average and maximum speed, FSDS lap times, cone contacts, completion reason, exact sensor/algorithm selection, map/model paths and research metadata.</p>
+<div class="goodbox"><b>Research strength:</b> Every run can carry its complete immutable manifest. This prevents a lap result from becoming detached from the sensor profile, controller, map/model and privileged-data status that produced it.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; IN-SIMULATOR UI</div>
+<h1>Benchmark Menu / HUD</h1>
+<img class="figure" src="images/benchmark-menu-preview.png" alt="Benchmark menu">
+<div class="caption">Current black/grey/white/orange benchmark menu preview.</div>
+<h2>Implemented controls</h2>
+<ul><li>Autonomy profile cards for AMZ, behavior cloning, SLAM + Pure Pursuit, SLAM + Stanley and general baseline.</li><li>LiDAR and depth-camera selectors.</li><li>ROS bridge start/status.</li><li>Manual keyboard-drive start/stop.</li><li>Apply/prepare profile through repository scripts.</li><li>Profile-specific RViz launcher.</li><li>F2 menu toggle and runtime status text.</li></ul>
+<div class="goodbox"><b>Runtime evidence:</b> The packaged TrainingMap log reached <span class="mono">AirSimGameMode</span> and printed <span class="mono">Benchmark menu: added native UMG host to viewport</span> with no fatal or missing runtime package error.</div>
+<div class="warnbox"><b>Validation limit:</b> Environment paths and all four referenced executable scripts were verified, but automated click-through of every button was not performed. Full acceptance still requires pressing each control in the packaged build and verifying its process/result state.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; STANDALONE SIMULATOR</div>
+<h1>Normal Launch Without Unreal Editor</h1>
+<h2>Implemented package</h2>
+<pre>cd /home/satvara/Github/Autonomous-kart-Sim
+./FSDS.sh
+
+# rebuild after Unreal/C++ HUD changes
+FSDS/scripts/fsds-package --development</pre>
+<p>The package is a LinuxNoEditor build, approximately 2.5 GB, with a repository-root launcher. It opens the normal FSDS menu; selecting TrainingMap loads the simulator and benchmark HUD. No FSOnline Editor or Unreal Editor is needed during routine operation.</p>
+<h2>Packaging fixes</h2>
+<table class="grid compact"><tr><th>Failure</th><th>Cause</th><th>Correction</th></tr>
+<tr><td>Non-editor C++ build failed in Chaos.</td><td>Linux game target disabled Unreal PCH behavior.</td><td>Restored default PCH handling.</td></tr>
+<tr><td>HUD header failed outside unity/editor build.</td><td><span class="mono">SComboBox</span> template lacked direct include.</td><td>Included <span class="mono">Widgets/Input/SComboBox.h</span>.</td></tr>
+<tr><td>TrainingMap package crashed loading car.</td><td>TechnionCar Blueprint loaded dynamically and not cooked.</td><td>Always cook Technion car and wheel assets.</td></tr>
+<tr><td>Weather classes missing at runtime.</td><td>Weather assets also dynamically loaded.</td><td>Always cook <span class="mono">/AirSim/Weather</span>.</td></tr>
+</table>
+<h2>Final runtime evidence</h2>
+<ul><li>Package build completed successfully.</li><li>Pak inspection found TrainingMap, MainMenuLevel, TechnionCarPawn and wheel materials.</li><li>Runtime reached TrainingMap and created the benchmark menu.</li><li>No fatal exception, SIGABRT, missing asset class or missing package remained.</li></ul>
+<div class="warnbox"><b>Nonfatal inherited warnings:</b> Main-menu focus, start-line zero scale, camera root component, Pawn EnableInput and initial weather actor-array warnings remain. They did not stop the validated runtime, but should be cleaned before a polished release.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; CONTROL &amp; SAFETY</div>
+<h1>Teleoperation, Controllers &amp; Motion Safety</h1>
+<h2>Manual control</h2>
+<table class="grid compact"><tr><th>Key</th><th>Function</th></tr><tr><td>E</td><td>Arm/disarm manual control.</td></tr><tr><td>W / S</td><td>Throttle / reverse or deceleration behavior.</td></tr><tr><td>A / D</td><td>Steer left / right.</td></tr><tr><td>Space</td><td>Emergency brake.</td></tr><tr><td>Q</td><td>Stop teleop process.</td></tr></table>
+<h2>Controller safety behavior</h2>
+<ul><li>Disabled by default and armed through service/script confirmation.</li><li>Fresh path and GSS speed required.</li><li>FSDS GO signal required where configured.</li><li>Stale/missing input produces full brake.</li><li>First new cone contact can terminate benchmark.</li><li>Full-lap event stops and writes result.</li><li>Concurrent command publishers are rejected.</li></ul>
+<h2>Static-friction launch assist</h2>
+<pre>launch throttle:       0.55
+pulse duration:        0.10 s
+release speed:         0.10 m/s
+failure timeout:       0.75 s
+
+if speed reached -> normal tracking
+if timeout reached -> full brake + disarm; no automatic retry</pre>
+<p>This bounded kick addresses observed FSDS static resistance without globally changing Unreal friction. It must be tuned from command/GSS recordings.</p>
+<div class="badbox"><b>Safety rule:</b> Never run keyboard teleop and an autonomous controller simultaneously. Exactly one publisher must own <span class="mono">/fsds/control_command</span>.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; RECORDED TEST RESULTS</div>
+<h1>Result Evidence in Repository</h1>
+<table class="grid compact"><tr><th>Family</th><th>Runs</th><th>Best recorded evidence</th><th>Interpretation</th></tr>
+<tr><td>Manual mapping</td><td>7</td><td>459.61 s lap, 461.77 m, zero cones</td><td>Complete but far slower than current manual target.</td></tr>
+<tr><td>SLAM route drive</td><td>1</td><td>543.75 s lap, 543.63 m, zero cones</td><td>Pipeline completion only.</td></tr>
+<tr><td>General oracle</td><td>2</td><td>177.24 m in 180.10 s, zero cones</td><td>Timed out; privileged baseline incomplete.</td></tr>
+<tr><td>AMZ local Delaunay</td><td>3</td><td>6.36 m maximum trial distance</td><td>No lap; friction/readiness/control issues remain.</td></tr>
+<tr><td>Behavior cloning</td><td>0 closed-loop results</td><td>One capture run only</td><td>No model and no autonomous evidence.</td></tr>
+</table>
+<h2>Performance reference</h2>
+<p>The user reports a manual TrainingMap lap around 44 seconds. A realistic first autonomy gate is a complete cone-free lap under 60 seconds. Existing 456-544 s artifacts must not be used as the optimization reference.</p>
+<h2>Result-quality requirements</h2>
+<ul><li>At least ten attempts per final profile.</li><li>Median and dispersion, not only fastest lap.</li><li>Completion ratio and every failure reason.</li><li>Zero cone contact / off-track acceptance gate.</li><li>Fixed track, seed, speed limit and reset pose.</li><li>Map/model hash in every result.</li></ul>
+<div class="warnbox"><b>Data hygiene:</b> Several August result files predate the current richer schema and have no explicit state field. Preserve them as historical evidence, but generate fresh results under the current manifest contract for comparisons.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; CURRENT ARTIFACT INVENTORY</div>
+<h1>Maps, Routes, Datasets &amp; Builds</h1>
+<table class="grid compact"><tr><th>Artifact</th><th>Evidence</th><th>Usability</th></tr>
+<tr><td>Generic SLAM pose graph</td><td><span class="mono">track.posegraph</span> ~69.8 MB; data/map/YAML present</td><td class="status-open">Historical; must match route/profile.</td></tr>
+<tr><td>Sensor-SLAM route</td><td>808 points, <span class="mono">slam/map</span>, closed by geometric loop gate</td><td class="status-ok">Present.</td></tr>
+<tr><td>Sensor-SLAM active graph</td><td>Only timestamped backup files exist</td><td class="status-fail">Not ready for launch.</td></tr>
+<tr><td>Invalid duplicate-TF route</td><td>1,895-point quarantined JSON</td><td class="status-fail">Do not use.</td></tr>
+<tr><td>AMZ cone map / centerline</td><td>Required files absent</td><td class="status-fail">Regenerate.</td></tr>
+<tr><td>BC dataset run-001</td><td>~307 MB; 2,950 RGB + 2,950 depth files</td><td class="status-open">Repair accounting; insufficient runs.</td></tr>
+<tr><td>BC models</td><td>No model directory/files</td><td class="status-fail">Not trained.</td></tr>
+<tr><td>Standalone simulator</td><td>LinuxNoEditor package ~2.5 GB</td><td class="status-ok">Runtime smoke-tested.</td></tr>
+<tr><td>Single Test manifests</td><td>AMZ, BC, general and SLAM generated contracts</td><td class="status-ok">Present; regenerate before each controlled run.</td></tr>
+</table>
+<div class="box"><b>Storage note:</b> Generated datasets, maps, build/install/log directories, results and packaged binaries are intentionally not source-controlled. Reports must therefore record hashes and archive locations if results need long-term reproducibility.</div>
+<h2>Immediate artifact recovery</h2>
+<ol><li>Archive current <span class="mono">generated/maps/TrainingMap</span>.</li><li>Run a fresh one-lap AMZ teach session.</li><li>Require all seven replay files to be non-empty.</li><li>Inspect persistent cones/centerline in RViz.</li><li>Only then launch autonomous replay.</li></ol>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; ERRORS &amp; RESOLUTIONS I</div>
+<h1>Bring-up Errors</h1>
+<table class="grid compact"><tr><th>Date</th><th>Error / symptom</th><th>Cause / diagnosis</th><th>Action / status</th></tr>
+<tr><td>07 Aug</td><td><span class="mono">fs_msgs</span> rosdep unresolved and nested directory.</td><td>Message package absent/mis-copied.</td><td>Added proper ROS 2 package at workspace source root.</td></tr>
+<tr><td>07 Aug</td><td><span class="mono">rpclib</span> had no CMakeLists.</td><td>External dependency/gitlink not populated.</td><td>Restored rpclib content; fresh-clone submodule mapping remains a risk.</td></tr>
+<tr><td>07-11 Aug</td><td>Sourcing Humble tried stale project <span class="mono">setup.sh</span>.</td><td><span class="mono">COLCON_CURRENT_PREFIX</span> contamination.</td><td>Exit/re-enter container and clear colcon/ament/CMake prefix variables.</td></tr>
+<tr><td>09 Aug</td><td><span class="mono">settings.json</span> parse error.</td><td>Missing comma after camera changes.</td><td>Corrected and added JSON validation before launch.</td></tr>
+<tr><td>09-11 Aug</td><td>Depth topics absent or image appeared blank.</td><td>Capture configuration and visualization interpretation.</td><td>Separate RGB/depth captures, correct bridge topics and metric display.</td></tr>
+<tr><td>11 Aug</td><td>RGB/depth frames mismatched; cloud QoS incompatible.</td><td>Registration frame and Reliability policy mismatch.</td><td>Common optical frame; Best Effort sensor QoS.</td></tr>
+<tr><td>11 Aug</td><td>Depth cloud perpendicular to grid.</td><td>Optical/vehicle coordinate transform.</td><td>Validated static TF rotation.</td></tr>
+<tr><td>12 Aug</td><td>RTAB map appeared as plain dense cells.</td><td>Depth surface display confused with persistent trajectory/map.</td><td>Separate cloud visualization from map/graph evaluation.</td></tr>
+</table>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; ERRORS &amp; RESOLUTIONS II</div>
+<h1>Autonomy, UI &amp; Packaging Errors</h1>
+<table class="grid compact"><tr><th>Date</th><th>Error / symptom</th><th>Cause / diagnosis</th><th>Action / status</th></tr>
+<tr><td>Aug-Sep</td><td>Vehicle did not move at low throttle.</td><td>FSDS static resistance/dead zone.</td><td>Bounded launch pulse with release-speed and timeout brake.</td></tr>
+<tr><td>15 Sep</td><td>Launch rejected existing control publisher.</td><td>Old controller/teleop still owned command topic.</td><td>One-publisher gate and cleanup scripts.</td></tr>
+<tr><td>15 Sep</td><td>Local cones/path did not leave a persistent track.</td><td>Reactive planner used vehicle-relative horizon only.</td><td>Added map-frame cone association and teach/repeat design.</td></tr>
+<tr><td>15 Sep</td><td>Route contained duplicate-TF corruption.</td><td>Frame chain duplicated during recording.</td><td>Quarantined as <span class="mono">route.invalid-duplicate-tf.json</span>; rebuilt sensor route.</td></tr>
+<tr><td>Aug-Sep</td><td>UI/editor repeatedly crashed or project path not found.</td><td>Wrong working directory, editor asset loading and editor-only workflow.</td><td>Repository launcher and standalone LinuxNoEditor package.</td></tr>
+<tr><td>17 Sep</td><td>Packaged game compile failed.</td><td>PCH override and missing direct template include.</td><td>Corrected game target and <span class="mono">SComboBox</span> header.</td></tr>
+<tr><td>17 Sep</td><td>Package crashed on TrainingMap.</td><td>Runtime-loaded TechnionCar absent from cook.</td><td>Always-cook vehicle/wheel assets.</td></tr>
+<tr><td>17 Sep</td><td>Weather actor/menu packages missing.</td><td>Dynamic object paths not discovered by cooker.</td><td>Always-cook AirSim Weather assets.</td></tr>
+<tr><td>Current</td><td>BC metadata and CSV counts differ by 50.</td><td>Likely recording/finalization accounting divergence.</td><td class="status-open">Open; validator must fail before training.</td></tr>
+</table>
+<div class="warnbox"><b>Diagnostic principle:</b> Build success is not runtime success. The package only became valid after pak inspection and a real TrainingMap smoke test exercised dynamic asset loading and HUD creation.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; VALIDATION STATUS</div>
+<h1>Current Validation Matrix</h1>
+<table class="grid compact"><tr><th>Subsystem</th><th>Evidence</th><th>Status</th><th>Next gate</th></tr>
+<tr><td>FSDS RPC / ROS bridge</td><td>Port and topic graph observed.</td><td class="status-ok">Working</td><td>Automated health check in every run.</td></tr>
+<tr><td>LiDAR / RGB-D / IMU</td><td>Topics and RViz output observed.</td><td class="status-ok">Working baseline</td><td>Per-profile rate/latency report.</td></tr>
+<tr><td>Depth point cloud / TF</td><td>Correct orientation and Best Effort RViz.</td><td class="status-ok">Working</td><td>Automated frame consistency test.</td></tr>
+<tr><td>VIO / RTAB VSLAM</td><td>Odometry and loop-closure UI observed.</td><td class="status-open">Baseline</td><td>Trajectory error and repeat loops.</td></tr>
+<tr><td>Single Test</td><td>Manifests/results and launch contract.</td><td class="status-ok">Implemented</td><td>Fresh end-to-end regression suite.</td></tr>
+<tr><td>General autonomy</td><td>Two 180 s timeouts, no lap.</td><td class="status-fail">Incomplete</td><td>Complete clean oracle lap.</td></tr>
+<tr><td>Reactive Delaunay</td><td>Three trials, maximum 6.36 m.</td><td class="status-fail">Incomplete</td><td>Stable first sector then full lap.</td></tr>
+<tr><td>AMZ teach/repeat</td><td>Closed route; required map/centerline missing.</td><td class="status-open">Code present</td><td>Fresh teach artifacts and replay lap.</td></tr>
+<tr><td>SLAM route autonomy</td><td>Historical cone-free 543.75 s lap.</td><td class="status-open">Functional, slow</td><td>Fresh map and &lt;60 s repeated laps.</td></tr>
+<tr><td>Behavior cloning</td><td>One dataset, no model.</td><td class="status-fail">Not deployable</td><td>12+ runs, shadow then closed loop.</td></tr>
+<tr><td>Benchmark UI</td><td>Runtime menu creation; scripts exist.</td><td class="status-open">Partially validated</td><td>Button-by-button packaged test.</td></tr>
+<tr><td>Standalone build</td><td>No fatal/missing-package errors.</td><td class="status-ok">Working</td><td>Release build and installer/archive.</td></tr>
+</table>
+<div class="box"><b>Historical software test note:</b> A prior project validation run recorded 588 passing tests. This report does not represent that as a fresh 28 September ROS/container rerun; current live acceptance still requires the functioning Humble environment.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; COMPLETION ESTIMATE</div>
+<h1>Implementation Readiness Estimate</h1>
+<div class="kicker">Engineering estimate, not formal test coverage</div>
+<table class="grid compact"><tr><th>Area</th><th>Estimate</th><th>Reason</th></tr>
+<tr><td>Simulator/bridge foundation</td><td>85%</td><td>Standalone, settings and ROS bridge work; release polish remains.</td></tr>
+<tr><td>Sensor configuration/visualization</td><td>80%</td><td>Four RGB-D and three LiDAR contracts; physical fidelity tests remain.</td></tr>
+<tr><td>Single Test orchestration</td><td>75%</td><td>Strong manifest/lifecycle/result base; CI and dashboard history remain.</td></tr>
+<tr><td>Benchmark UI</td><td>60%</td><td>Functional layout and process hooks; complete click-through/results screens remain.</td></tr>
+<tr><td>SLAM mapped autonomy</td><td>55%</td><td>Historical complete lap; current artifact set and performance invalid.</td></tr>
+<tr><td>AMZ teach/repeat</td><td>45%</td><td>Algorithm/code present; complete saved artifact and replay proof absent.</td></tr>
+<tr><td>Behavior cloning</td><td>35%</td><td>Pipeline and one capture; no valid split/model/closed-loop proof.</td></tr>
+<tr><td>General deployable autonomy</td><td>40%</td><td>Core components exist; no repeatable fast cone-free lap yet.</td></tr>
+<tr><td>Multi-vehicle racing</td><td>10%</td><td>Concept only.</td></tr>
+<tr><td>Simulation-to-real synchronization</td><td>15%</td><td>Architecture/pinout context exists; transport and safety arbitration not integrated.</td></tr>
+</table>
+<div class="warnbox"><b>Overall interpretation:</b> The platform/infrastructure is substantially ahead of autonomy performance. The next milestone should be one reproducible full-lap autonomy profile, not additional breadth.</div>
+<h2>Recommended focus</h2>
+<p>Freeze sensor/profile selection, regenerate one high-quality map, validate AMZ or SLAM replay at conservative speed, and only then optimize toward the sub-60-second target.</p>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; IMPLEMENTATION ROADMAP</div>
+<h1>What Will Be Implemented</h1>
+<table class="grid compact"><tr><th>Phase</th><th>Deliverable</th><th>Exit gate</th></tr>
+<tr><td>1. Artifact recovery</td><td>Fresh SLAM graph, persistent cone map, route and Delaunay centerline.</td><td>All files non-empty; loop and RViz inspection pass.</td></tr>
+<tr><td>2. Conservative replay</td><td>Loaded-map AMZ and SLAM Pure Pursuit laps.</td><td>Three complete cone-free laps at low speed.</td></tr>
+<tr><td>3. Controller comparison</td><td>Pure Pursuit vs Stanley on identical map/route.</td><td>Ten trials each with hashes and failure records.</td></tr>
+<tr><td>4. Performance tuning</td><td>Lookahead, target speed, steering gain and launch assist.</td><td>Median lap under 60 s, zero cone contact.</td></tr>
+<tr><td>5. Behavior cloning</td><td>12-30 independent laps, recovery data, RGB/RGB-D models.</td><td>Held-out shadow metrics then 9/10 completed laps.</td></tr>
+<tr><td>6. State estimation</td><td>VIO + wheel/GSS + chassis IMU fusion.</td><td>Measured drift/covariance and drop-out recovery.</td></tr>
+<tr><td>7. UI completion</td><td>Test history, live graphs, validation messages and results comparison.</td><td>Button-by-button packaged acceptance test.</td></tr>
+<tr><td>8. Multi-vehicle</td><td>Namespaced vehicles, race manager, overtaking/collision safety.</td><td>Three vehicles complete controlled race without collisions.</td></tr>
+<tr><td>9. Sim-to-real</td><td>VCU gateway, command/feedback synchronization and hardware safety authority.</td><td>Bench HIL, lifted-kart test, then closed-course test.</td></tr>
+</table>
+<h2>Algorithm expansion candidates</h2>
+<ul><li>EKF/UKF state estimation and covariance-aware failover.</li><li>MPC or curvature-aware speed planning after baseline controllers.</li><li>Graph-SLAM backend comparison and localization recovery.</li><li>Cone classification/free-space fusion using RGB-D plus LiDAR.</li><li>Nav2 waypoint comparison only where its assumptions fit the track.</li></ul>
+<div class="badbox"><b>Sequencing rule:</b> Do not add algorithms merely to populate the menu. A profile enters the benchmark only after it has an executable launch, immutable manifest, readiness checks, safe stop and repeatable result.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; SIMULATION TO REAL KART</div>
+<h1>Real-Kart Synchronization Plan</h1>
+<h2>Target hardware context</h2>
+<p>ESP32-S3 vehicle controller; two NEMA 23/TB6600 axes for steering and brake; BLD750/BLDC traction through a 0-5 V PWM-to-voltage converter; steering/brake feedback and chassis sensing.</p>
+<pre class="circuit">Autonomy computer / Jetson                         ESP32-S3 VCU
+ROS desired steering, throttle, brake  -------->  deterministic actuator loops
+ROS heartbeat + mode + sequence        -------->  watchdog / command validation
+actual steering/brake/speed/faults     <--------  timestamped telemetry
+                                                   |
+                         +-------------------------+-------------------+
+                         |                         |                   |
+                 TB6600 steering            TB6600 brake         BLD750 traction</pre>
+<h2>Required command architecture</h2>
+<ul><li>Simulation and real-kart adapters expose the same high-level command and feedback interfaces.</li><li>The VCU, not ROS, owns pulse generation, limits, enable polarity, watchdog and emergency stop.</li><li>Manual RC, autonomous ROS and simulator mirroring require explicit mode arbitration.</li><li>Physical feedback drives the simulator only in a dedicated hardware-in-the-loop mode; simulated state must never overwrite safety-critical real feedback.</li><li>Every command carries sequence, timestamp and timeout.</li></ul>
+<h2>Validation stages</h2>
+<ol><li>Software-in-the-loop without hardware motion.</li><li>VCU bench with disconnected actuators and synthetic feedback.</li><li>Hardware-in-the-loop with motors unloaded/lifted.</li><li>Manual RC mirrored into simulator.</li><li>Autonomy commands observed but not actuated.</li><li>Low-speed closed-course autonomous test with independent E-stop.</li></ol>
+<div class="badbox"><b>Safety boundary:</b> Behavior cloning or simulator autonomy must never directly generate step pulses or analog motor voltage. It produces bounded vehicle-level targets; the VCU enforces hardware limits and can always reject or stop them.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; ACCEPTANCE TEST PLAN</div>
+<h1>Recommended Validation Sequence</h1>
+<h2>Pre-motion gate</h2>
+<ol><li>Validate JSON/YAML and exact generated manifest.</li><li>Start standalone FSDS and confirm RPC.</li><li>Start bridge and verify required topics/rates.</li><li>Validate TF tree and timestamps.</li><li>Open profile-specific RViz.</li><li>Confirm controller state is DISABLED.</li><li>Confirm exactly one control publisher.</li><li>Inspect path between boundaries.</li></ol>
+<h2>Motion gate</h2>
+<table class="grid compact"><tr><th>Stage</th><th>Distance / objective</th><th>Pass condition</th></tr>
+<tr><td>Launch</td><td>Leave start box.</td><td>Assist releases; state becomes TRACKING; no oscillation.</td></tr>
+<tr><td>Straight</td><td>20-30 m.</td><td>Stable centerline and no cone approach.</td></tr>
+<tr><td>First corner</td><td>One sector.</td><td>Path remains between boundaries; no stale brake.</td></tr>
+<tr><td>Full lap</td><td>One complete loop.</td><td>Lap event, zero cones, result written.</td></tr>
+<tr><td>Repeatability</td><td>10 reset trials.</td><td>At least 9 completions; median under target.</td></tr>
+</table>
+<h2>Failure capture</h2>
+<p>Record ROS bag, manifest, settings, controller status, path, command, speed, TF diagnostics, lap/cone telemetry and simulator log. Keep failed runs in the benchmark history.</p>
+<div class="goodbox"><b>Immediate next test:</b> Run one fresh AMZ teach lap from the start pose, confirm loop acceptance and all map/centerline files, restart FSDS, launch replay disabled with RViz, then arm only after the loaded path overlays the track correctly.</div>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; SOURCE TRACEABILITY</div>
+<h1>Principal Source Files</h1>
+<table class="grid compact"><tr><th>Area</th><th>Principal source</th></tr>
+<tr><td>Bridge</td><td class="mono">FSDS/ros2/src/fsds_ros2_bridge/src/*.cpp</td></tr>
+<tr><td>Single Test</td><td class="mono">single_test/src/config.cpp, prepare.cpp, session.cpp</td></tr>
+<tr><td>Teleop</td><td class="mono">teleop/src/keyboard_teleop.cpp</td></tr>
+<tr><td>LiDAR autonomy</td><td class="mono">autonomy/src/cone_detector.cpp, geometry.cpp, local_planner.cpp</td></tr>
+<tr><td>Persistent mapping</td><td class="mono">autonomy/src/cone_map_builder.cpp; slam/src/route_recorder.cpp</td></tr>
+<tr><td>Controllers</td><td class="mono">autonomy/src/pure_pursuit.cpp, route_planner.cpp</td></tr>
+<tr><td>Sensor odometry</td><td class="mono">slam/src/sensor_odometry.cpp</td></tr>
+<tr><td>Behavior cloning</td><td class="mono">demonstration_collector.cpp, inference_controller.cpp, training/train.py</td></tr>
+<tr><td>Benchmark UI</td><td class="mono">FSDS/UE4Project/Plugins/AirSim/Source/SimHUD/</td></tr>
+<tr><td>Standalone build</td><td class="mono">FSDS.sh; FSDS/scripts/fsds-package</td></tr>
+</table>
+<h2>Key Git commits</h2>
+<table class="grid compact"><tr><th>Commit</th><th>Date</th><th>Change</th></tr>
+<tr><td>3c850dcf</td><td>11 Aug</td><td>Working RGB-D D455 configuration.</td></tr><tr><td>16e85f31</td><td>11 Aug</td><td>VIO baseline.</td></tr><tr><td>db6c9ddf</td><td>12 Aug</td><td>VSLAM RTAB map patch.</td></tr><tr><td>8087e8c8</td><td>14 Aug</td><td>C++ LiDAR testing merge.</td></tr><tr><td>5346af0d</td><td>17 Aug</td><td>Single Test manifest.</td></tr><tr><td>92185f51</td><td>28 Aug</td><td>Behavior cloning pipeline.</td></tr><tr><td>2a2d32f8</td><td>29 Aug</td><td>Local autonomy.</td></tr><tr><td>1263ea26</td><td>15 Sep</td><td>Autonomy benchmark UI.</td></tr><tr><td>8813ff29</td><td>15 Sep</td><td>Working triangulation.</td></tr><tr><td>b3cfedcc</td><td>17 Sep</td><td>RViz custom profile in UI.</td></tr><tr><td>88e318a6</td><td>17 Sep</td><td>Standalone FSDS build.</td></tr></table>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+<div class="page">
+<div class="header">AUTOKART &nbsp;|&nbsp; CONCLUSION</div>
+<h1>Conclusion &amp; Immediate Actions</h1>
+<p>The project has achieved a credible autonomy research platform: the simulator is repository-owned, ROS 2 sensor/TF integration works, several autonomy families share a common test contract, the benchmark UI runs in a standalone package, and historical mapping/autonomous results are preserved. The strongest engineering work is the infrastructure around reproducibility, safety-gated control and algorithm comparison.</p>
+<p>The central gap is no longer “can FSDS connect to ROS?” It is “can one non-privileged autonomy profile repeatedly complete the track at useful speed?” The evidence currently says no. The route/SLAM path completed slowly in the past, local Delaunay did not complete, AMZ replay lacks active artifacts, and behavior cloning lacks a trainable multi-run dataset and model.</p>
+<h2>Next five actions</h2>
+<ol><li>Fix the behavior dataset sample-count mismatch and improve validator failure reporting.</li><li>Generate one clean AMZ map/centerline package from a manual 44-50 s-quality lap.</li><li>Run conservative AMZ loaded-map replay with complete RViz evidence.</li><li>Establish three cone-free laps, then tune toward a median below 60 s.</li><li>Complete packaged UI click-through and add result-history visualization.</li></ol>
+<div class="goodbox"><b>What has genuinely been achieved:</b> A configurable FSDS autonomy benchmark foundation with working sensor integration, C++ autonomy components, teach/localize/replay infrastructure, behavior-cloning tooling, safety gates, manifests/results and a normal standalone simulator UI.</div>
+<div class="badbox"><b>What must not yet be claimed:</b> Production autonomy, repeatable sub-60-second laps, validated behavior-cloning control, complete AMZ replay, multi-vehicle racing, or safe real-kart autonomous actuation.</div>
+<h2>Report basis</h2>
+<p class="small">Repository inspection on 28 September 2026; Git history through <span class="mono">88e318a6</span>; generated result/map/dataset artifacts; package/runtime validation record; and the project development history. Static code presence is kept separate from simulator-observed behavior and repeatable performance evidence.</p>
+<div class="footer">Simulation &amp; Autonomy Engineering Report &nbsp;|&nbsp; Updated 28 September 2026</div>
+</div>
+
+</body>
+</html>
